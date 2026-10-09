@@ -87,7 +87,7 @@
 
         async function excluirCliente(id) {
             if (confirm('Tem certeza que deseja excluir este cliente?')) {
-                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: csrfHeaders() });
                 if (response.ok) {
                     alert('Cliente excluído com sucesso!');
                     carregarClientes();
