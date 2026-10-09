@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -35,37 +37,27 @@ public class UsuarioController {
     // Endpoint para criar um novo usuário
     @PostMapping
     public ResponseEntity<Usuario> criarUsuario(@RequestBody Usuario usuario) {
-        usuarioService.salvarUsuario(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+        Usuario salvo = usuarioService.salvarUsuario(usuario);
+        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
     // Endpoint para atualizar um usuário
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizarUsuario(@PathVariable String id, @RequestBody Usuario usuarioAtualizado) {
-        Optional<Usuario> usuarioExistente = usuarioService.buscarPorId(id);
-
-        if (usuarioExistente.isPresent()) {
-            Usuario usuario = usuarioExistente.get();
-            usuario.setUsername(usuarioAtualizado.getUsername());
-            usuario.setPassword(usuarioAtualizado.getPassword());
-            usuarioService.salvarUsuario(usuario);
-
-            return ResponseEntity.ok(usuario);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Usuario> atualizarUsuario(@PathVariable String id, @RequestBody Usuario usuarioAtualizado,
+            Principal principal) {
+        Usuario usuario = usuarioService.atualizarUsuario(id, usuarioAtualizado, principal.getName());
+        return ResponseEntity.ok(usuario);
     }
 
     // Endpoint para deletar um usuário
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarUsuario(@PathVariable String id) {
-        Optional<Usuario> usuarioExistente = usuarioService.buscarPorId(id);
+    public ResponseEntity<Void> deletarUsuario(@PathVariable String id, Principal principal) {
+        usuarioService.deletarUsuario(id, principal.getName());
+        return ResponseEntity.noContent().build();
+    }
 
-        if (usuarioExistente.isPresent()) {
-            usuarioService.deletarUsuario(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> tratarErro(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
     }
 }
