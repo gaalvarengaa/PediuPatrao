@@ -100,7 +100,7 @@ public class PedidoService {
             throw new RegraNegocioException("Informe o novo status.");
         }
         Pedido pedido = buscarPorId(id);
-        StatusPedido atual = pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
+        StatusPedido atual = statusAtual(pedido);
 
         if (atual == StatusPedido.CANCELADO) {
             throw new RegraNegocioException("Pedido cancelado não pode ter o status alterado.");
@@ -145,7 +145,7 @@ public class PedidoService {
                     + TAMANHO_MINIMO_JUSTIFICATIVA + " caracteres).");
         }
         Pedido pedido = buscarPorId(id);
-        StatusPedido atual = pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
+        StatusPedido atual = statusAtual(pedido);
 
         if (atual == StatusPedido.CANCELADO) {
             throw new RegraNegocioException("O pedido já está cancelado.");
@@ -180,7 +180,7 @@ public class PedidoService {
                     + DESCONTO_MAXIMO.toPlainString() + "%.");
         }
         Pedido pedido = buscarPorId(id);
-        StatusPedido atual = pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
+        StatusPedido atual = statusAtual(pedido);
 
         if (atual == StatusPedido.CANCELADO) {
             throw new RegraNegocioException("Não é possível aplicar desconto em pedido cancelado.");
@@ -219,6 +219,11 @@ public class PedidoService {
         campos.put("canceladoPor", pedido.getCanceladoPor());
         campos.put("dataHoraCancelamento", pedido.getDataHoraCancelamento());
         return campos;
+    }
+
+    /** Pedidos antigos podem não ter status gravado; nesse caso são tratados como recebidos. */
+    private StatusPedido statusAtual(Pedido pedido) {
+        return pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
     }
 
     private String descreverProximos(StatusPedido atual) {
