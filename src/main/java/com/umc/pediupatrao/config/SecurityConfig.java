@@ -1,6 +1,8 @@
 package com.umc.pediupatrao.config;
 
 import com.umc.pediupatrao.service.UsuarioDetailsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -10,18 +12,26 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final UsuarioDetailsService usuarioDetailsService;
 
@@ -87,6 +97,7 @@ public class SecurityConfig {
                         .defaultAuthenticationEntryPointFor(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                                 new AntPathRequestMatcher("/api/**"))
+                        .accessDeniedHandler(accessDeniedHandler())
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -100,6 +111,32 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    /**
+     * Registra no log toda tentativa de acesso indevido (sem dados sensíveis) e
+     * responde 403 em JSON para as APIs; nas páginas exibe a tela de erro.
+     */
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, ex) -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String usuario = auth != null ? auth.getName() : "anônimo";
+            boolean csrf = ex instanceof CsrfException;
+            log.warn("Acesso negado{}: usuario={} metodo={} uri={}",
+                    csrf ? " (token CSRF ausente ou inválido)" : "", usuario, request.getMethod(), request.getRequestURI());
+
+            if (request.getRequestURI().startsWith("/api/")) {
+                String mensagem = csrf
+                        ? "Token CSRF ausente ou inválido."
+                        : "Acesso negado: seu perfil não tem permissão para esta operação.";
+                response.setStatus(HttpStatus.FORBIDDEN.value());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"erro\":\"" + mensagem + "\"}");
+            } else {
+                response.sendError(HttpStatus.FORBIDDEN.value());
+            }
+        };
     }
 
     @Bean

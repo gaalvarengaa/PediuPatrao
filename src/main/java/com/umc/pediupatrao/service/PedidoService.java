@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -137,6 +138,7 @@ public class PedidoService {
      * Cancela o pedido (operação exclusiva do gerente). Exige justificativa, só é
      * permitido antes da saída e mantém todos os dados do pedido para histórico.
      */
+    @PreAuthorize("hasRole('GERENTE')")
     public Pedido cancelar(String id, String justificativa) {
         if (justificativa == null || justificativa.trim().length() < TAMANHO_MINIMO_JUSTIFICATIVA) {
             throw new RegraNegocioException("Justificativa obrigatória para o cancelamento (mínimo "
@@ -170,6 +172,7 @@ public class PedidoService {
      * Aplica desconto percentual (operação exclusiva do gerente), limitado a 20% e
      * somente antes da saída. O novo desconto substitui o anterior e o total é recalculado.
      */
+    @PreAuthorize("hasRole('GERENTE')")
     public Pedido aplicarDesconto(String id, BigDecimal percentual, String justificativa) {
         if (percentual == null || percentual.compareTo(BigDecimal.ZERO) <= 0
                 || percentual.compareTo(DESCONTO_MAXIMO) > 0) {
