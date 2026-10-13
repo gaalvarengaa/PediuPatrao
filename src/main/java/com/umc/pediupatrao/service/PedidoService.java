@@ -88,10 +88,67 @@ public class PedidoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado."));
     }
 
-    public Pedido atualizarStatus(String id, StatusPedido status) {
+    /**
+     * Avança o pedido no fluxo obrigatório. Na saída (entrega/retirada) e na finalização
+     * registra data/hora e responsável. Cancelamento não é feito por aqui.
+     */
+    public Pedido atualizarStatus(String id, StatusPedido novoStatus) {
+        if (novoStatus == null) {
+            throw new RegraNegocioException("Informe o novo status.");
+        }
         Pedido pedido = buscarPorId(id);
-        pedido.setStatus(status);
-        return pedidoRepository.save(pedido);
+        StatusPedido atual = pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
+
+        if (atual == StatusPedido.CANCELADO) {
+            throw new RegraNegocioException("Pedido cancelado não pode ter o status alterado.");
+        }
+        if (novoStatus == StatusPedido.CANCELADO) {
+            throw new RegraNegocioException("Para cancelar utilize a operação de cancelamento, exclusiva do gerente.");
+        }
+        if (!atual.podeIrPara(novoStatus)) {
+            throw new RegraNegocioException("Transição inválida: " + atual.getDescricao() + " → "
+                    + novoStatus.getDescricao() + ". " + descreverProximos(atual));
+        }
+
+        Map<String, Object> antes = camposDeStatus(pedido);
+        String usuario = usuarioLogado.getUsername();
+        LocalDateTime agora = LocalDateTime.now();
+
+        pedido.setStatus(novoStatus);
+        if (novoStatus.isSaida()) {
+            pedido.setDataHoraSaida(agora);
+            pedido.setResponsavelSaida(usuario);
+        }
+        if (novoStatus == StatusPedido.FINALIZADO) {
+            pedido.setDataHoraFinalizacao(agora);
+            pedido.setResponsavelFinalizacao(usuario);
+        }
+
+        Pedido salvo = pedidoRepository.save(pedido);
+
+        auditoriaService.registrar(TipoOperacao.ALTERACAO_STATUS_PEDIDO, ENTIDADE, salvo.getId(),
+                AuditoriaService.compararCampos(antes, camposDeStatus(salvo)), null);
+        return salvo;
+    }
+
+    private String descreverProximos(StatusPedido atual) {
+        if (atual.getProximosStatus().isEmpty()) {
+            return "O pedido já está concluído.";
+        }
+        return "Próximo(s) permitido(s): " + atual.getProximosStatus().stream()
+                .map(StatusPedido::getDescricao)
+                .reduce((a, b) -> a + " ou " + b)
+                .orElse("") + ".";
+    }
+
+    private Map<String, Object> camposDeStatus(Pedido pedido) {
+        Map<String, Object> campos = new LinkedHashMap<>();
+        campos.put("status", pedido.getStatus());
+        campos.put("dataHoraSaida", pedido.getDataHoraSaida());
+        campos.put("responsavelSaida", pedido.getResponsavelSaida());
+        campos.put("dataHoraFinalizacao", pedido.getDataHoraFinalizacao());
+        campos.put("responsavelFinalizacao", pedido.getResponsavelFinalizacao());
+        return campos;
     }
 
     private ItemPedido montarItem(ItemPedidoRequest item) {
