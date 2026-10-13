@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -54,10 +53,5 @@ public class UsuarioController {
     public ResponseEntity<Void> deletarUsuario(@PathVariable String id, Principal principal) {
         usuarioService.deletarUsuario(id, principal.getName());
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> tratarErro(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
     }
 }
