@@ -33,9 +33,9 @@
                     <tr>
                         <th class="ps-4">ID</th>
                         <th>Cliente ID</th>
-                        <th>Tipo de Pizza</th>
-                        <th>Sabor</th>
-                        <th>Quantidade</th>
+                        <th>Itens</th>
+                        <th>Total</th>
+                        <th>Entrada</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -51,15 +51,22 @@
                     <tr th:each="pedido : ${pedidos}">
                         <td class="ps-4 text-muted" th:text="${pedido.id}"></td>
                         <td th:text="${pedido.clienteId}"></td>
-                        <td th:text="${pedido.tipoPizza}"></td>
-                        <td th:text="${pedido.sabor}"></td>
-                        <td th:text="${pedido.quantidade}"></td>
+                        <td>
+                            <div th:each="item : ${pedido.itens}" class="small"
+                                 th:text="${item.quantidade + 'x ' + item.nomeProduto}"></div>
+                        </td>
+                        <td th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                        <td class="small">
+                            <div th:text="${pedido.dataHoraEntrada != null} ? ${#temporals.format(pedido.dataHoraEntrada, 'dd/MM/yyyy HH:mm')} : '—'"></div>
+                            <div class="text-muted" th:text="${pedido.responsavelEntrada}"></div>
+                        </td>
                         <td>
                             <span class="badge"
-                                  th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
-                                                  (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
-                                                  (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
-                                  th:text="${pedido.status}">
+                                  th:if="${pedido.status != null}"
+                                  th:classappend="${pedido.status.name() == 'FINALIZADO'} ? 'bg-success' :
+                                                  (${pedido.status.name() == 'CANCELADO'} ? 'bg-danger' :
+                                                  (${pedido.status.name() == 'EM_PREPARACAO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
+                                  th:text="${pedido.status.descricao}">
                             </span>
                         </td>
                     </tr>

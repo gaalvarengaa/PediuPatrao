@@ -1,6 +1,7 @@
 package com.umc.pediupatrao.service;
 
 import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.entity.StatusPedido;
 import com.umc.pediupatrao.repository.PedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class PedidoService {
         return pedidoRepository.findAll();
     }
 
-    public Pedido atualizarStatus(String id, String status) {
+    public Pedido atualizarStatus(String id, StatusPedido status) {
         Pedido pedido = pedidoRepository.findById(id).orElseThrow();
         pedido.setStatus(status);
         return pedidoRepository.save(pedido);
