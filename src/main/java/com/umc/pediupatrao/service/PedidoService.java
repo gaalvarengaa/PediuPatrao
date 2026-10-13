@@ -28,6 +28,7 @@ public class PedidoService {
     static final String ENTIDADE = "Pedido";
     static final int QUANTIDADE_MAXIMA_POR_ITEM = 50;
     static final int TAMANHO_MINIMO_JUSTIFICATIVA = 5;
+    static final BigDecimal DESCONTO_MAXIMO = new BigDecimal("20");
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
@@ -163,6 +164,50 @@ public class PedidoService {
         auditoriaService.registrar(TipoOperacao.CANCELAMENTO_PEDIDO, ENTIDADE, salvo.getId(),
                 AuditoriaService.compararCampos(antes, camposDeCancelamento(salvo)), salvo.getJustificativaCancelamento());
         return salvo;
+    }
+
+    /**
+     * Aplica desconto percentual (operação exclusiva do gerente), limitado a 20% e
+     * somente antes da saída. O novo desconto substitui o anterior e o total é recalculado.
+     */
+    public Pedido aplicarDesconto(String id, BigDecimal percentual, String justificativa) {
+        if (percentual == null || percentual.compareTo(BigDecimal.ZERO) <= 0
+                || percentual.compareTo(DESCONTO_MAXIMO) > 0) {
+            throw new RegraNegocioException("O desconto deve ser maior que 0% e no máximo "
+                    + DESCONTO_MAXIMO.toPlainString() + "%.");
+        }
+        Pedido pedido = buscarPorId(id);
+        StatusPedido atual = pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
+
+        if (atual == StatusPedido.CANCELADO) {
+            throw new RegraNegocioException("Não é possível aplicar desconto em pedido cancelado.");
+        }
+        if (!atual.isAntesDaSaida()) {
+            throw new RegraNegocioException("Desconto só pode ser aplicado antes da saída para entrega ou retirada.");
+        }
+
+        Map<String, Object> antes = camposDeDesconto(pedido);
+
+        pedido.setPercentualDesconto(percentual.setScale(2, RoundingMode.HALF_UP));
+        recalcularValores(pedido);
+        pedido.setDescontoAplicadoPor(usuarioLogado.getUsername());
+        pedido.setDataHoraDesconto(LocalDateTime.now());
+
+        Pedido salvo = pedidoRepository.save(pedido);
+
+        String motivo = justificativa == null || justificativa.isBlank() ? null : justificativa.trim();
+        auditoriaService.registrar(TipoOperacao.DESCONTO_PEDIDO, ENTIDADE, salvo.getId(),
+                AuditoriaService.compararCampos(antes, camposDeDesconto(salvo)), motivo);
+        return salvo;
+    }
+
+    private Map<String, Object> camposDeDesconto(Pedido pedido) {
+        Map<String, Object> campos = new LinkedHashMap<>();
+        campos.put("percentualDesconto", pedido.getPercentualDesconto());
+        campos.put("valorDesconto", pedido.getValorDesconto());
+        campos.put("valorTotal", pedido.getValorTotal());
+        campos.put("descontoAplicadoPor", pedido.getDescontoAplicadoPor());
+        return campos;
     }
 
     private Map<String, Object> camposDeCancelamento(Pedido pedido) {
