@@ -27,6 +27,7 @@ public class PedidoService {
 
     static final String ENTIDADE = "Pedido";
     static final int QUANTIDADE_MAXIMA_POR_ITEM = 50;
+    static final int TAMANHO_MINIMO_JUSTIFICATIVA = 5;
 
     private final PedidoRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
@@ -129,6 +130,47 @@ public class PedidoService {
         auditoriaService.registrar(TipoOperacao.ALTERACAO_STATUS_PEDIDO, ENTIDADE, salvo.getId(),
                 AuditoriaService.compararCampos(antes, camposDeStatus(salvo)), null);
         return salvo;
+    }
+
+    /**
+     * Cancela o pedido (operação exclusiva do gerente). Exige justificativa, só é
+     * permitido antes da saída e mantém todos os dados do pedido para histórico.
+     */
+    public Pedido cancelar(String id, String justificativa) {
+        if (justificativa == null || justificativa.trim().length() < TAMANHO_MINIMO_JUSTIFICATIVA) {
+            throw new RegraNegocioException("Justificativa obrigatória para o cancelamento (mínimo "
+                    + TAMANHO_MINIMO_JUSTIFICATIVA + " caracteres).");
+        }
+        Pedido pedido = buscarPorId(id);
+        StatusPedido atual = pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
+
+        if (atual == StatusPedido.CANCELADO) {
+            throw new RegraNegocioException("O pedido já está cancelado.");
+        }
+        if (!atual.isAntesDaSaida()) {
+            throw new RegraNegocioException("Pedido não pode ser cancelado após a saída para entrega ou retirada.");
+        }
+
+        Map<String, Object> antes = camposDeCancelamento(pedido);
+
+        pedido.setStatus(StatusPedido.CANCELADO);
+        pedido.setJustificativaCancelamento(justificativa.trim());
+        pedido.setCanceladoPor(usuarioLogado.getUsername());
+        pedido.setDataHoraCancelamento(LocalDateTime.now());
+
+        Pedido salvo = pedidoRepository.save(pedido);
+
+        auditoriaService.registrar(TipoOperacao.CANCELAMENTO_PEDIDO, ENTIDADE, salvo.getId(),
+                AuditoriaService.compararCampos(antes, camposDeCancelamento(salvo)), salvo.getJustificativaCancelamento());
+        return salvo;
+    }
+
+    private Map<String, Object> camposDeCancelamento(Pedido pedido) {
+        Map<String, Object> campos = new LinkedHashMap<>();
+        campos.put("status", pedido.getStatus());
+        campos.put("canceladoPor", pedido.getCanceladoPor());
+        campos.put("dataHoraCancelamento", pedido.getDataHoraCancelamento());
+        return campos;
     }
 
     private String descreverProximos(StatusPedido atual) {

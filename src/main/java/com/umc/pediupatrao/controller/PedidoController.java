@@ -1,5 +1,6 @@
 package com.umc.pediupatrao.controller;
 
+import com.umc.pediupatrao.dto.CancelamentoRequest;
 import com.umc.pediupatrao.dto.NovoPedidoRequest;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.StatusPedido;
@@ -37,5 +38,10 @@ public class PedidoController {
     @PutMapping("/{id}/status")
     public Pedido atualizarStatus(@PathVariable String id, @RequestParam StatusPedido status) {
         return pedidoService.atualizarStatus(id, status);
+    }
+
+    @PostMapping("/{id}/cancelar")
+    public Pedido cancelar(@PathVariable String id, @RequestBody CancelamentoRequest cancelamento) {
+        return pedidoService.cancelar(id, cancelamento.justificativa());
     }
 }
