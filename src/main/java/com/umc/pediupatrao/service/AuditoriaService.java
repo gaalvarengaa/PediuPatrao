@@ -3,9 +3,11 @@ package com.umc.pediupatrao.service;
 import com.umc.pediupatrao.entity.CampoAlterado;
 import com.umc.pediupatrao.entity.RegistroAuditoria;
 import com.umc.pediupatrao.entity.TipoOperacao;
+import com.umc.pediupatrao.exception.RegraNegocioException;
 import com.umc.pediupatrao.repository.AuditoriaRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -55,13 +57,24 @@ public class AuditoriaService {
 
     /**
      * Consulta os registros (mais recentes primeiro), com filtros opcionais.
+     * O período considera o dia inteiro de "de" até o fim do dia de "ate".
      * Telefones são mascarados para limitar a exposição de dados pessoais.
      */
-    public List<RegistroAuditoria> consultar(String entidade, String entidadeId, String usuario) {
+    public List<RegistroAuditoria> consultar(String entidade, String entidadeId, String usuario,
+            TipoOperacao operacao, LocalDate de, LocalDate ate) {
+        if (de != null && ate != null && de.isAfter(ate)) {
+            throw new RegraNegocioException("A data inicial não pode ser posterior à data final.");
+        }
+        LocalDateTime inicio = de != null ? de.atStartOfDay() : null;
+        LocalDateTime fim = ate != null ? ate.plusDays(1).atStartOfDay() : null;
+
         return auditoriaRepository.findAllByOrderByDataHoraDesc().stream()
                 .filter(r -> vazio(entidade) || entidade.equalsIgnoreCase(r.getEntidade()))
                 .filter(r -> vazio(entidadeId) || entidadeId.equals(r.getEntidadeId()))
                 .filter(r -> vazio(usuario) || usuario.equalsIgnoreCase(r.getUsuario()))
+                .filter(r -> operacao == null || operacao == r.getOperacao())
+                .filter(r -> inicio == null || !r.getDataHora().isBefore(inicio))
+                .filter(r -> fim == null || r.getDataHora().isBefore(fim))
                 .map(this::mascararDadosPessoais)
                 .toList();
     }
