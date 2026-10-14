@@ -5,15 +5,21 @@ import org.slf4j.LoggerFactory;
 import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
+import com.umc.pediupatrao.entity.TipoOperacao;
 import com.umc.pediupatrao.entity.Usuario;
 import com.umc.pediupatrao.exception.RecursoNaoEncontradoException;
 import com.umc.pediupatrao.exception.RegraNegocioException;
+import com.umc.pediupatrao.service.AuditoriaService;
 import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -39,6 +46,9 @@ public class HomeController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private AuditoriaService auditoriaService;
 
     @GetMapping("/login")
     public String login() {
@@ -132,7 +142,20 @@ public class HomeController {
     @GetMapping("/pedidos")
     public String pedidos(Model model) {
         List<Pedido> pedidos = pedidoService.listarPedidos();
+        List<Cliente> clientes = clienteService.listarClientes();
+
+        Map<String, String> nomesClientes = new HashMap<>();
+        for (Cliente cliente : clientes) {
+            nomesClientes.put(cliente.getId(), cliente.getNome());
+        }
+        List<Produto> produtosAtivos = produtoService.listarProdutos().stream()
+                .filter(p -> Boolean.TRUE.equals(p.getAtivo()))
+                .toList();
+
         model.addAttribute("pedidos", pedidos);
+        model.addAttribute("clientes", clientes);
+        model.addAttribute("clientesNomes", nomesClientes);
+        model.addAttribute("produtos", produtosAtivos);
         model.addAttribute("content", "pedidos :: content");
         log.info("Carregando fragmento: pedidos :: content");
         return "layout";
@@ -225,21 +248,39 @@ public class HomeController {
     }
 
     // ========================
+    // AUDITORIA
+    // ========================
+    @GetMapping("/auditoria")
+    public String auditoria(@RequestParam(required = false) String entidade,
+            @RequestParam(required = false) String entidadeId,
+            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) TipoOperacao operacao,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
+            Model model) {
+        try {
+            model.addAttribute("registros", auditoriaService.consultar(entidade, entidadeId, usuario, operacao, de, ate));
+        } catch (RegraNegocioException e) {
+            model.addAttribute("erro", e.getMessage());
+            model.addAttribute("registros", List.of());
+        }
+        model.addAttribute("entidade", entidade);
+        model.addAttribute("entidadeId", entidadeId);
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("operacao", operacao);
+        model.addAttribute("de", de);
+        model.addAttribute("ate", ate);
+        model.addAttribute("operacoes", TipoOperacao.values());
+        model.addAttribute("content", "auditoria/lista :: content");
+        return "layout";
+    }
+
+    // ========================
     // OUTRAS ROTAS
     // ========================
     @GetMapping("/configuracoes")
     public String configuracoes(Model model) {
         model.addAttribute("content", "configuracoes :: content");
         return "layout";
-    }
-
-    @GetMapping("/teste")
-    public String teste() {
-        return "teste";
-    }
-
-    @GetMapping("/admin")
-    public String admin() {
-        return "admin";
     }
 }
