@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Auditoria</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-journal-text me-2 text-primary"></i>Auditoria
+        </h2>
+    </div>
+
+    <div class="alert alert-danger" th:if="${erro}" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form method="get" th:action="@{/auditoria}" class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label for="entidade" class="form-label fw-medium">Entidade</label>
+                    <select id="entidade" name="entidade" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="Pedido" th:selected="${entidade == 'Pedido'}">Pedido</option>
+                        <option value="Cliente" th:selected="${entidade == 'Cliente'}">Cliente</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="entidadeId" class="form-label fw-medium">ID da entidade</label>
+                    <input type="text" id="entidadeId" name="entidadeId" class="form-control"
+                           th:value="${entidadeId}">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="usuario" class="form-label fw-medium">Usuário</label>
+                    <input type="text" id="usuario" name="usuario" class="form-control"
+                           th:value="${usuario}">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="operacao" class="form-label fw-medium">Operação</label>
+                    <select id="operacao" name="operacao" class="form-select">
+                        <option value="">Todas</option>
+                        <option th:each="op : ${operacoes}" th:value="${op.name()}"
+                                th:text="${op.descricao}"
+                                th:selected="${operacao == op}"></option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="de" class="form-label fw-medium">De</label>
+                    <input type="date" id="de" name="de" class="form-control" th:value="${de}">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="ate" class="form-label fw-medium">Até</label>
+                    <input type="date" id="ate" name="ate" class="form-control" th:value="${ate}">
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <a th:href="@{/auditoria}" class="btn btn-outline-secondary">Limpar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registros -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">Data e hora</th>
+                        <th>Usuário</th>
+                        <th>Operação</th>
+                        <th>Entidade</th>
+                        <th>Alterações</th>
+                        <th>Justificativa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(registros)}">
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+                    <tr th:each="registro : ${registros}">
+                        <td class="ps-4 small"
+                            th:text="${#temporals.format(registro.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
+                        <td class="small">
+                            <div th:text="${registro.usuario}"></div>
+                            <span class="badge bg-secondary" th:text="${registro.perfil}"></span>
+                        </td>
+                        <td class="small" th:text="${registro.operacao.descricao}"></td>
+                        <td class="small">
+                            <div th:text="${registro.entidade}"></div>
+                            <div class="text-muted" th:text="${registro.entidadeId}"></div>
+                        </td>
+                        <td class="small">
+                            <div th:each="campo : ${registro.alteracoes}">
+                                <strong th:text="${campo.campo()}"></strong>:
+                                <span class="text-muted" th:text="${campo.valorAnterior() ?: '—'}"></span>
+                                &rarr;
+                                <span th:text="${campo.valorNovo() ?: '—'}"></span>
+                            </div>
+                        </td>
+                        <td class="small" th:text="${registro.justificativa ?: '—'}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(registros)}">
+            Total: <strong th:text="${#lists.size(registros)}"></strong> registro(s)
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
