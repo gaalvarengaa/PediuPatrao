@@ -16,6 +16,13 @@
         </h2>
     </div>
 
+    <!-- Mensagem de erro -->
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert" style="max-width: 600px;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <div class="card shadow-sm" style="max-width: 600px;">
         <div class="card-body p-4">
 

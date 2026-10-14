@@ -6,6 +6,8 @@ import com.umc.pediupatrao.entity.Cliente;
 import com.umc.pediupatrao.entity.Pedido;
 import com.umc.pediupatrao.entity.Produto;
 import com.umc.pediupatrao.entity.Usuario;
+import com.umc.pediupatrao.exception.RecursoNaoEncontradoException;
+import com.umc.pediupatrao.exception.RegraNegocioException;
 import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
@@ -168,9 +170,14 @@ public class HomeController {
     }
 
     @PostMapping("/clientes/salvar")
-    public String salvarCliente(@ModelAttribute Cliente cliente,
+    public String salvarCliente(@ModelAttribute Cliente cliente, Model model,
             RedirectAttributes redirectAttributes) {
-        clienteService.salvar(cliente);
+        try {
+            cliente.setId(null);
+            clienteService.salvar(cliente);
+        } catch (RegraNegocioException e) {
+            return reexibirFormularioCliente(cliente, e.getMessage(), model);
+        }
         redirectAttributes.addFlashAttribute("sucesso", "Cliente criado com sucesso!");
         return "redirect:/clientes";
     }
@@ -194,12 +201,27 @@ public class HomeController {
 
     @PostMapping("/clientes/editar/{id}")
     public String atualizarCliente(@PathVariable String id,
-            @ModelAttribute Cliente cliente,
+            @ModelAttribute Cliente cliente, Model model,
             RedirectAttributes redirectAttributes) {
         cliente.setId(id);
-        clienteService.salvar(cliente);
+        try {
+            clienteService.atualizar(id, cliente);
+        } catch (RecursoNaoEncontradoException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/clientes";
+        } catch (RegraNegocioException e) {
+            return reexibirFormularioCliente(cliente, e.getMessage(), model);
+        }
         redirectAttributes.addFlashAttribute("sucesso", "Cliente atualizado com sucesso!");
         return "redirect:/clientes";
+    }
+
+    // Volta ao formulário mantendo o que foi digitado e exibindo o motivo do erro
+    private String reexibirFormularioCliente(Cliente cliente, String erro, Model model) {
+        model.addAttribute("cliente", cliente);
+        model.addAttribute("erro", erro);
+        model.addAttribute("content", "clientes/form :: content");
+        return "layout";
     }
 
     // ========================

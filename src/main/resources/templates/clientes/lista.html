@@ -14,6 +14,18 @@
         </a>
     </div>
 
+    <!-- Mensagens de feedback -->
+    <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <!-- Tabela de clientes -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
@@ -92,7 +104,9 @@
                     alert('Cliente excluído com sucesso!');
                     carregarClientes();
                 } else {
-                    alert('Erro ao excluir o cliente.');
+                    // Exibe o motivo informado pelo servidor (ex.: cliente com pedidos, sem permissão)
+                    const corpo = await response.json().catch(() => ({}));
+                    alert(corpo.erro || 'Erro ao excluir o cliente.');
                 }
             }
         }
