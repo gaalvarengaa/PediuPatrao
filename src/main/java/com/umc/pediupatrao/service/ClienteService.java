@@ -6,6 +6,7 @@ import com.umc.pediupatrao.entity.TipoOperacao;
 import com.umc.pediupatrao.exception.RecursoNaoEncontradoException;
 import com.umc.pediupatrao.exception.RegraNegocioException;
 import com.umc.pediupatrao.repository.ClienteRepository;
+import com.umc.pediupatrao.repository.PedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.LinkedHashMap;
@@ -23,6 +24,9 @@ public class ClienteService {
     private ClienteRepository clienteRepository;
 
     @Autowired
+    private PedidoRepository pedidoRepository;
+
+    @Autowired
     private AuditoriaService auditoriaService;
 
     public Cliente novoCliente(Cliente cliente) {
@@ -33,9 +37,21 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
-    // Método para excluir cliente
+    /**
+     * Exclui o cliente. Clientes com pedidos não podem ser excluídos, para preservar o
+     * histórico; a exclusão é auditada com os dados que o cliente tinha.
+     */
     public void excluir(String id) {
+        Cliente existente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado."));
+        if (pedidoRepository.existsByClienteId(id)) {
+            throw new RegraNegocioException("Cliente possui pedidos registrados e não pode ser excluído.");
+        }
+
         clienteRepository.deleteById(id);
+
+        auditoriaService.registrar(TipoOperacao.EXCLUSAO_CLIENTE, ENTIDADE, id,
+                AuditoriaService.compararCampos(camposAuditados(existente), Map.of()), null);
     }
 
     public Optional<Cliente> buscarPorId(String id) {
