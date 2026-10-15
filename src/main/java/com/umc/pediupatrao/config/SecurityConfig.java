@@ -67,7 +67,7 @@ public class SecurityConfig {
                 }))
                 .httpBasic(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/login", "/error", "/css/**", "/js/**", "/images/**").permitAll()
 
                         // Usuarios
                         .requestMatchers("/usuarios/**", "/api/usuarios/**").hasRole("ADMIN")
