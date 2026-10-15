@@ -80,26 +80,41 @@
 
             clientes.forEach(cliente => {
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${cliente.nome || '—'}</td>
-                    <td>${cliente.telefone || '—'}</td>
-                    <td>${formatarEndereco(cliente)}</td>
-                    <td class="text-end pe-4">
-                        <a href="/clientes/editar/${cliente.id}" class="btn btn-sm btn-outline-primary me-1">
-                            <i class="bi bi-pencil-fill"></i> Editar
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger" onclick="excluirCliente('${cliente.id}')">
-                            <i class="bi bi-trash-fill"></i> Excluir
-                        </button>
-                    </td>
-                `;
+                // Dados do cliente entram como texto (textContent), nunca como HTML, evitando XSS
+                row.appendChild(celula(cliente.nome || '—'));
+                row.appendChild(celula(cliente.telefone || '—'));
+                row.appendChild(celula(formatarEndereco(cliente)));
+
+                const acoes = document.createElement('td');
+                acoes.className = 'text-end pe-4';
+
+                const editar = document.createElement('a');
+                editar.href = '/clientes/editar/' + encodeURIComponent(cliente.id);
+                editar.className = 'btn btn-sm btn-outline-primary me-1';
+                editar.innerHTML = '<i class="bi bi-pencil-fill"></i> Editar';
+                acoes.appendChild(editar);
+
+                const excluir = document.createElement('button');
+                excluir.type = 'button';
+                excluir.className = 'btn btn-sm btn-outline-danger';
+                excluir.innerHTML = '<i class="bi bi-trash-fill"></i> Excluir';
+                excluir.addEventListener('click', () => excluirCliente(cliente.id));
+                acoes.appendChild(excluir);
+
+                row.appendChild(acoes);
                 tabelaClientes.appendChild(row);
             });
         }
 
+        function celula(texto) {
+            const td = document.createElement('td');
+            td.textContent = texto;
+            return td;
+        }
+
         async function excluirCliente(id) {
             if (confirm('Tem certeza que deseja excluir este cliente?')) {
-                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: csrfHeaders() });
+                const response = await fetch(`${API_URL}/${encodeURIComponent(id)}`, { method: 'DELETE', headers: csrfHeaders() });
                 if (response.ok) {
                     alert('Cliente excluído com sucesso!');
                     carregarClientes();
