@@ -17,9 +17,15 @@ Para usar outro endereço do MongoDB, defina a variável `MONGODB_URI`. O banco 
 sh ./mvnw spring-boot:run
 ```
 
+No Windows (PowerShell ou CMD):
+
+```bash
+mvnw.cmd spring-boot:run
+```
+
 A aplicação sobe em `http://localhost:8080`.
 
-## Usuários de teste
+## Dados iniciais
 
 Na primeira execução são criados os usuários abaixo, todos com a senha `teste123`:
 
@@ -30,6 +36,8 @@ Na primeira execução são criados os usuários abaixo, todos com a senha `test
 | `atendente` | ATENDENTE |
 
 Troque essas senhas antes de usar o sistema em produção.
+
+Quando não há nenhum produto cadastrado, também é criado um cardápio básico para que os pedidos possam ser registrados de imediato: Pizza Calabresa (R$ 45,00), Pizza Margherita (R$ 42,00), Pizza Quatro Queijos (R$ 52,00), Refrigerante 2L (R$ 12,00) e Borda Recheada (R$ 8,00).
 
 ## Perfis e permissões
 
@@ -90,18 +98,28 @@ curl -u gerente:teste123 -X POST http://localhost:8080/api/pedidos/ID/cancelar \
 sh ./mvnw test
 ```
 
-Os testes cobrem as transições de status, o cancelamento, o desconto, o cálculo do total no servidor, o mascaramento de telefone e a exclusão de senhas da auditoria.
+São 40 testes automatizados, que não precisam de MongoDB em execução:
+
+- **Regras de negócio (19):** transições de status, cancelamento, desconto, cálculo do total no servidor, mascaramento de telefone e exclusão de senhas da auditoria.
+- **Permissões das APIs (21):** sobem a configuração real do Spring Security (`@WebMvcTest`) e comprovam o bloqueio no backend. Por exemplo: ATENDENTE e ADMIN recebem 403 ao cancelar ou aplicar desconto; ATENDENTE recebe 403 na auditoria; só o ADMIN gerencia usuários; a auditoria não aceita `POST` nem `DELETE`; requisições de sessão sem token CSRF são recusadas; sem login, a API responde 401.
+
+Os testes também rodam em JDKs mais novos que o 21: o `maven-surefire-plugin` já está configurado para o Mockito funcionar nessas versões.
 
 ## Principais alterações em relação à versão inicial
 
 - Perfis passaram de ADMIN/USER para ADMIN, GERENTE e ATENDENTE.
 - Novas entidades e serviços para pedidos (itens, valores, responsável, cancelamento e desconto) e para auditoria.
 - Telas de pedidos, produtos e auditoria reescritas, com ações conforme o perfil.
-- Validação de dados de produtos e clientes no serviço.
+- Validação de dados de produtos e clientes no serviço, com mensagens de erro exibidas nas telas.
+- Correção de XSS na lista de clientes: os dados passaram a ser inseridos como texto, e os botões aparecem conforme o perfil.
+- Respostas de acesso negado em JSON nas APIs (403) e registro em log das tentativas, incluindo falhas de CSRF.
+- Testes automatizados de regras de negócio e de permissões.
 - Remoção de templates e links que não funcionavam (`produto-form.html`, `sidebar_1.html`, `admin.html`, rotas `/admin` e `/teste`, links de funcionários, entregadores e horários).
+- Remoção dos arquivos do tema AdminLTE (`static/plugins` e `static/dist`, cerca de 2.050 arquivos) que não eram usados por nenhuma página, e de dependências e configurações sem efeito (`lombok`, `jakarta.persistence-api`, `spring.security.user.*`).
 
 ## Limitações conhecidas
 
 - A auditoria é gravada depois da alteração do pedido. O MongoDB standalone usado aqui não tem transação, então uma falha entre as duas operações pode deixar um pedido sem registro.
+- A imutabilidade da auditoria é garantida pela aplicação (sem endpoints de alteração, repositório só de inclusão e leitura e entidade sem setters). Quem acessa o MongoDB diretamente, por exemplo pelo Compass, ainda consegue alterar os documentos.
 - O controle de horários de funcionamento (`horariosAtendimento`) não foi implementado. A coleção só é criada.
 - Usuários cadastrados antes desta versão com role `USER` ficam sem perfil (`SEM_PERFIL`) e não acessam o sistema. Basta atribuir um dos três perfis.
