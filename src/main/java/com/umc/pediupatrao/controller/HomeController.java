@@ -14,6 +14,7 @@ import com.umc.pediupatrao.service.ClienteService;
 import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -140,7 +141,7 @@ public class HomeController {
     // PEDIDOS
     // ========================
     @GetMapping("/pedidos")
-    public String pedidos(Model model) {
+    public String pedidos(Model model, HttpServletRequest request) {
         List<Pedido> pedidos = pedidoService.listarPedidos();
         List<Cliente> clientes = clienteService.listarClientes();
 
@@ -152,8 +153,12 @@ public class HomeController {
                 .filter(p -> Boolean.TRUE.equals(p.getAtivo()))
                 .toList();
 
+        // Lista completa de clientes (com telefone) só para quem registra pedidos;
+        // o ADMIN apenas consulta pedidos e vê somente o nome do cliente de cada um
+        boolean registraPedidos = request.isUserInRole("GERENTE") || request.isUserInRole("ATENDENTE");
+
         model.addAttribute("pedidos", pedidos);
-        model.addAttribute("clientes", clientes);
+        model.addAttribute("clientes", registraPedidos ? clientes : List.of());
         model.addAttribute("clientesNomes", nomesClientes);
         model.addAttribute("produtos", produtosAtivos);
         model.addAttribute("content", "pedidos :: content");
@@ -272,15 +277,6 @@ public class HomeController {
         model.addAttribute("ate", ate);
         model.addAttribute("operacoes", TipoOperacao.values());
         model.addAttribute("content", "auditoria/lista :: content");
-        return "layout";
-    }
-
-    // ========================
-    // OUTRAS ROTAS
-    // ========================
-    @GetMapping("/configuracoes")
-    public String configuracoes(Model model) {
-        model.addAttribute("content", "configuracoes :: content");
         return "layout";
     }
 }

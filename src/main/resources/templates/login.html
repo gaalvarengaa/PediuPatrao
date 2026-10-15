@@ -36,7 +36,15 @@
             <!-- Espaço para a logo -->
             <img th:src="@{/images/logo.png}" alt="Logo" class="logo">
             <h3 class="mb-4">Bem-vindo</h3>
-            
+
+            <!-- Mensagens de autenticação -->
+            <div class="alert alert-danger text-start" th:if="${param.error}" role="alert">
+                Usuário ou senha inválidos.
+            </div>
+            <div class="alert alert-success text-start" th:if="${param.logout}" role="alert">
+                Você saiu do sistema.
+            </div>
+
             <!-- Formulário de Login -->
             <form th:action="@{/login}" method="post">
                 <div class="form-group mb-3">
@@ -49,11 +57,6 @@
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Entrar</button>
             </form>
-            
-            <!-- Link de recuperação de senha e outros -->
-            <div class="mt-3">
-                <a href="#" class="text-decoration-none">Esqueceu sua senha?</a>
-            </div>
         </div>
     </div>
     

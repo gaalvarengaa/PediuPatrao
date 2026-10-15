@@ -51,7 +51,7 @@ As regras são aplicadas no backend (`SecurityConfig` e `@PreAuthorize`). Escond
 
 ## Requisitos implementados
 
-**RF01 — Usuários e permissões.** Três perfis, gestão de usuários restrita ao ADMIN, proteção contra autoelevação (ninguém altera o próprio perfil nem exclui o próprio usuário) e proteção das APIs por perfil.
+**RF01 — Usuários e permissões.** Três perfis, gestão de usuários restrita ao ADMIN, proteção contra autoelevação (ninguém altera o próprio perfil, renomeia a própria conta ou exclui o próprio usuário) e proteção das APIs por perfil.
 
 **RF02 — Cadastro de pedidos.** Pedido com itens, quantidades, preços, descontos, valor total, responsável pelo registro e data/hora de entrada. Preços vêm do cadastro de produtos e o total é calculado no servidor. Os campos de valor enviados na requisição são ignorados.
 
@@ -59,7 +59,7 @@ As regras são aplicadas no backend (`SecurityConfig` e `@PreAuthorize`). Escond
 
 **RF04 — Cancelamentos e descontos (somente GERENTE).**
 - Cancelamento exige justificativa de pelo menos 5 caracteres e só é permitido antes da saída.
-- Desconto percentual de 0% a 20%, só antes da saída.
+- Desconto percentual maior que 0% e de no máximo 20%, só antes da saída. Um novo desconto substitui o anterior.
 - Ambas as operações são auditadas com usuário, data/hora e valores anteriores e novos.
 
 **RF05 — Auditoria.** Registros persistentes no MongoDB (coleção `auditoria`) para inclusão, status, desconto e cancelamento de pedidos, e inclusão, alteração e exclusão de clientes. Cada registro guarda usuário, perfil, data/hora, operação, entidade e ID, campos alterados com valores anteriores e novos, e justificativa quando houver.
@@ -98,9 +98,9 @@ curl -u gerente:teste123 -X POST http://localhost:8080/api/pedidos/ID/cancelar \
 sh ./mvnw test
 ```
 
-São 40 testes automatizados, que não precisam de MongoDB em execução:
+São 51 testes automatizados, que não precisam de MongoDB em execução:
 
-- **Regras de negócio (19):** transições de status, cancelamento, desconto, cálculo do total no servidor, mascaramento de telefone e exclusão de senhas da auditoria.
+- **Regras de negócio (30):** transições de status, cancelamento, desconto, cálculo do total no servidor, auditoria das alterações de clientes (valores anteriores e novos de endereço e telefone), validação de clientes, proteção contra autoalteração de perfil, mascaramento de telefone e exclusão de senhas da auditoria.
 - **Permissões das APIs (21):** sobem a configuração real do Spring Security (`@WebMvcTest`) e comprovam o bloqueio no backend. Por exemplo: ATENDENTE e ADMIN recebem 403 ao cancelar ou aplicar desconto; ATENDENTE recebe 403 na auditoria; só o ADMIN gerencia usuários; a auditoria não aceita `POST` nem `DELETE`; requisições de sessão sem token CSRF são recusadas; sem login, a API responde 401.
 
 Os testes também rodam em JDKs mais novos que o 21: o `maven-surefire-plugin` já está configurado para o Mockito funcionar nessas versões.
@@ -114,7 +114,10 @@ Os testes também rodam em JDKs mais novos que o 21: o `maven-surefire-plugin` j
 - Correção de XSS na lista de clientes: os dados passaram a ser inseridos como texto, e os botões aparecem conforme o perfil.
 - Respostas de acesso negado em JSON nas APIs (403) e registro em log das tentativas, incluindo falhas de CSRF.
 - Testes automatizados de regras de negócio e de permissões.
-- Remoção de templates e links que não funcionavam (`produto-form.html`, `sidebar_1.html`, `admin.html`, rotas `/admin` e `/teste`, links de funcionários, entregadores e horários).
+- Tela de login com mensagens de senha inválida e de saída do sistema.
+- Telas de produtos e pedidos montadas conforme o perfil: o ATENDENTE não vê ações de produtos, e o ADMIN não recebe a lista de clientes ao consultar pedidos.
+- Busca do cliente no novo pedido digitando o nome ou o telefone.
+- Remoção de templates e links que não funcionavam (`produto-form.html`, `sidebar_1.html`, `admin.html`, `configuracoes.html`, rotas `/admin`, `/teste` e `/configuracoes`, links de funcionários, entregadores e horários).
 - Remoção dos arquivos do tema AdminLTE (`static/plugins` e `static/dist`, cerca de 2.050 arquivos) que não eram usados por nenhuma página, e de dependências e configurações sem efeito (`lombok`, `jakarta.persistence-api`, `spring.security.user.*`).
 
 ## Limitações conhecidas
@@ -123,3 +126,4 @@ Os testes também rodam em JDKs mais novos que o 21: o `maven-surefire-plugin` j
 - A imutabilidade da auditoria é garantida pela aplicação (sem endpoints de alteração, repositório só de inclusão e leitura e entidade sem setters). Quem acessa o MongoDB diretamente, por exemplo pelo Compass, ainda consegue alterar os documentos.
 - O controle de horários de funcionamento (`horariosAtendimento`) não foi implementado. A coleção só é criada.
 - Usuários cadastrados antes desta versão com role `USER` ficam sem perfil (`SEM_PERFIL`) e não acessam o sistema. Basta atribuir um dos três perfis.
+- Quando o ADMIN altera o perfil de um usuário que está logado, a mudança vale a partir do próximo login desse usuário (as permissões da sessão são carregadas na autenticação).

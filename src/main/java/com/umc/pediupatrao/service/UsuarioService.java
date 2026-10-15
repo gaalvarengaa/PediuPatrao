@@ -74,7 +74,14 @@ public class UsuarioService {
             throw new IllegalArgumentException("Você não pode alterar o próprio perfil.");
         }
 
-        usuarioExistente.setUsername(validarUsername(usuarioAtualizado.getUsername(), id));
+        String novoUsername = validarUsername(usuarioAtualizado.getUsername(), id);
+        // A sessão identifica o usuário pelo username: renomear a própria conta permitiria
+        // escapar das verificações acima (alterar o próprio perfil ou excluir a própria conta)
+        if (proprioUsuario && !novoUsername.equals(usuarioExistente.getUsername())) {
+            throw new IllegalArgumentException("Você não pode alterar o próprio username.");
+        }
+
+        usuarioExistente.setUsername(novoUsername);
         usuarioExistente.setRole(usuarioAtualizado.getRole());
 
         // Só atualiza a senha se uma nova foi informada

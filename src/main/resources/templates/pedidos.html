@@ -25,18 +25,22 @@
     </div>
     <div class="alert alert-danger" id="pedido-erro" role="alert" style="display: none;"></div>
 
-    <!-- Formulário de novo pedido -->
-    <div class="card shadow-sm mb-4" id="pedido-form-card" style="display: none; max-width: 800px;">
+    <!-- Formulário de novo pedido (montado só para quem registra pedidos; o ADMIN não recebe a lista de clientes) -->
+    <div class="card shadow-sm mb-4" id="pedido-form-card" style="display: none; max-width: 800px;"
+         sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3">Novo pedido</h5>
             <form id="pedidoForm">
                 <div class="mb-3">
-                    <label for="clienteId" class="form-label fw-medium">Cliente</label>
-                    <select id="clienteId" class="form-select" required>
-                        <option value="" disabled selected>Selecione o cliente</option>
-                        <option th:each="cliente : ${clientes}" th:value="${cliente.id}"
-                                th:text="${cliente.nome}"></option>
-                    </select>
+                    <label for="clienteBusca" class="form-label fw-medium">Cliente</label>
+                    <input type="text" id="clienteBusca" class="form-control" list="clientes-lista"
+                           placeholder="Digite o nome ou o telefone do cliente" autocomplete="off" required>
+                    <!-- Sugestões da busca; o pedido é enviado com o ID do cliente escolhido -->
+                    <datalist id="clientes-lista">
+                        <option th:each="cliente : ${clientes}"
+                                th:value="${cliente.nome + ' — ' + (cliente.telefone ?: 'sem telefone')}"
+                                th:data-id="${cliente.id}"></option>
+                    </datalist>
                 </div>
 
                 <div class="mb-2 fw-medium">Itens</div>
@@ -128,7 +132,8 @@
         </div>
     </div>
 
-    <!-- Modelo de item usado pelo JavaScript -->
+    <!-- Modelo de item e ações da tela: só para quem registra e movimenta pedidos -->
+    <th:block sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
     <template id="modelo-item">
         <div class="row g-2 align-items-end mb-2 item-pedido">
             <div class="col-sm-7">
@@ -197,9 +202,23 @@
                 }
             });
 
+            // Converte o texto escolhido na busca ("Nome — telefone") no ID do cliente
+            function clienteSelecionadoId() {
+                const texto = document.getElementById('clienteBusca').value.trim();
+                const opcao = Array.from(document.querySelectorAll('#clientes-lista option'))
+                        .find(o => o.value === texto);
+                return opcao ? opcao.dataset.id : null;
+            }
+
             form.addEventListener('submit', async (evento) => {
                 evento.preventDefault();
                 mostrarErro('');
+
+                const clienteId = clienteSelecionadoId();
+                if (!clienteId) {
+                    mostrarErro('Cliente não encontrado. Digite o nome ou o telefone e escolha um cliente da lista.');
+                    return;
+                }
 
                 const itens = Array.from(listaItens.querySelectorAll('.item-pedido')).map(linha => ({
                     produtoId: linha.querySelector('.item-produto').value,
@@ -210,7 +229,7 @@
                     method: 'POST',
                     headers: csrfHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
-                        clienteId: document.getElementById('clienteId').value,
+                        clienteId: clienteId,
                         itens: itens
                     })
                 });
@@ -257,7 +276,7 @@
 
             document.querySelectorAll('.btn-desconto').forEach(botao => {
                 botao.addEventListener('click', async () => {
-                    const percentual = prompt('Percentual de desconto (maior que 0 e até 20):');
+                    const percentual = prompt('Informe o percentual de desconto a ser aplicado (máximo de 20%):');
                     if (percentual === null) {
                         return;
                     }
@@ -275,6 +294,7 @@
             });
         })();
     </script>
+    </th:block>
 </div>
 
 </body>
