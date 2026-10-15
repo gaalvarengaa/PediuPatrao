@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Lista de Clientes</title>
 </head>
@@ -9,10 +9,14 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-person-raised-hand me-2 text-primary"></i>Clientes
         </h2>
-        <a href="/clientes/novo" class="btn btn-primary">
+        <a href="/clientes/novo" class="btn btn-primary" sec:authorize="hasRole('ATENDENTE')">
             <i class="bi bi-plus-lg me-1"></i> Novo Cliente
         </a>
     </div>
+
+    <!-- Permissões do usuário logado, lidas pelo JavaScript para exibir as ações (o backend também valida) -->
+    <span id="pode-editar" sec:authorize="hasRole('ATENDENTE')" hidden></span>
+    <span id="pode-excluir" sec:authorize="hasRole('GERENTE')" hidden></span>
 
     <!-- Mensagens de feedback -->
     <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
@@ -48,6 +52,8 @@
     <script>
         const API_URL = '/api/clientes';
         const tabelaClientes = document.getElementById('clientes-tabela');
+        const podeEditar = document.getElementById('pode-editar') !== null;
+        const podeExcluir = document.getElementById('pode-excluir') !== null;
 
         function formatarEndereco(cliente) {
             const partes = [
@@ -88,18 +94,22 @@
                 const acoes = document.createElement('td');
                 acoes.className = 'text-end pe-4';
 
-                const editar = document.createElement('a');
-                editar.href = '/clientes/editar/' + encodeURIComponent(cliente.id);
-                editar.className = 'btn btn-sm btn-outline-primary me-1';
-                editar.innerHTML = '<i class="bi bi-pencil-fill"></i> Editar';
-                acoes.appendChild(editar);
+                if (podeEditar) {
+                    const editar = document.createElement('a');
+                    editar.href = '/clientes/editar/' + encodeURIComponent(cliente.id);
+                    editar.className = 'btn btn-sm btn-outline-primary me-1';
+                    editar.innerHTML = '<i class="bi bi-pencil-fill"></i> Editar';
+                    acoes.appendChild(editar);
+                }
 
-                const excluir = document.createElement('button');
-                excluir.type = 'button';
-                excluir.className = 'btn btn-sm btn-outline-danger';
-                excluir.innerHTML = '<i class="bi bi-trash-fill"></i> Excluir';
-                excluir.addEventListener('click', () => excluirCliente(cliente.id));
-                acoes.appendChild(excluir);
+                if (podeExcluir) {
+                    const excluir = document.createElement('button');
+                    excluir.type = 'button';
+                    excluir.className = 'btn btn-sm btn-outline-danger';
+                    excluir.innerHTML = '<i class="bi bi-trash-fill"></i> Excluir';
+                    excluir.addEventListener('click', () => excluirCliente(cliente.id));
+                    acoes.appendChild(excluir);
+                }
 
                 row.appendChild(acoes);
                 tabelaClientes.appendChild(row);
