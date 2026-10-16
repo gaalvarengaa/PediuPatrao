@@ -67,13 +67,14 @@
                         <th>Itens</th>
                         <th>Total</th>
                         <th>Entrada</th>
+                        <th>Saída</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="6" class="text-center text-muted py-5">
+                        <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                             Nenhum pedido encontrado.
                         </td>
@@ -97,6 +98,10 @@
                             <div th:text="${pedido.dataHoraEntrada != null} ? ${#temporals.format(pedido.dataHoraEntrada, 'dd/MM/yyyy HH:mm')} : '—'"></div>
                             <div class="text-muted" th:text="${pedido.responsavelEntrada}"></div>
                         </td>
+                        <td class="small">
+                            <div th:text="${pedido.dataHoraSaida != null} ? ${#temporals.format(pedido.dataHoraSaida, 'dd/MM/yyyy HH:mm')} : '—'"></div>
+                            <div class="text-muted" th:text="${pedido.responsavelSaida}"></div>
+                        </td>
                         <td>
                             <span class="badge"
                                   th:if="${pedido.status != null}"
@@ -104,6 +109,10 @@
                                                   (${pedido.status.name() == 'CANCELADO'} ? 'bg-danger' :
                                                   (${pedido.status.name() == 'EM_PREPARACAO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
                                   th:text="${pedido.status.descricao}"></span>
+                            <div class="small text-muted mt-1" th:if="${pedido.canceladoPor != null}">
+                                <div th:text="${'por ' + pedido.canceladoPor}"></div>
+                                <div th:text="${pedido.justificativaCancelamento}"></div>
+                            </div>
                         </td>
                         <td class="text-end pe-4">
                             <div class="d-flex flex-wrap justify-content-end gap-1" th:if="${pedido.status != null}">
