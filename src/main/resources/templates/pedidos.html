@@ -11,8 +11,7 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
-        <button class="btn btn-primary" type="button" id="btn-novo-pedido"
-                sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
+        <button class="btn btn-primary" type="button" id="btn-novo-pedido">
             <i class="bi bi-plus-lg"></i> Novo pedido
         </button>
     </div>
@@ -25,9 +24,8 @@
     </div>
     <div class="alert alert-danger" id="pedido-erro" role="alert" style="display: none;"></div>
 
-    <!-- Formulário de novo pedido (montado só para quem registra pedidos; o ADMIN não recebe a lista de clientes) -->
-    <div class="card shadow-sm mb-4" id="pedido-form-card" style="display: none; max-width: 800px;"
-         sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
+    <!-- Formulário de novo pedido (o ADMIN não recebe a lista de clientes e o backend recusa o registro) -->
+    <div class="card shadow-sm mb-4" id="pedido-form-card" style="display: none; max-width: 800px;">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3">Novo pedido</h5>
             <form id="pedidoForm">
@@ -117,14 +115,13 @@
                         <td class="text-end pe-4">
                             <div class="d-flex flex-wrap justify-content-end gap-1" th:if="${pedido.status != null}">
                                 <!-- Próximos status do fluxo (validados no servidor) -->
-                                <span sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')"
-                                      th:each="proximo : ${pedido.status.proximosStatus}">
+                                <span th:each="proximo : ${pedido.status.proximosStatus}">
                                     <button type="button" class="btn btn-sm btn-outline-primary btn-avancar-status"
                                             th:data-id="${pedido.id}" th:data-status="${proximo.name()}"
                                             th:text="${proximo.descricao}"></button>
                                 </span>
 
-                                <span sec:authorize="hasRole('GERENTE')" th:if="${pedido.status.antesDaSaida}">
+                                <span th:if="${pedido.status.antesDaSaida}">
                                     <button type="button" class="btn btn-sm btn-outline-warning btn-desconto"
                                             th:data-id="${pedido.id}">Desconto</button>
                                     <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar"
@@ -141,8 +138,7 @@
         </div>
     </div>
 
-    <!-- Modelo de item e ações da tela: só para quem registra e movimenta pedidos -->
-    <th:block sec:authorize="hasAnyRole('GERENTE', 'ATENDENTE')">
+    <!-- Modelo de item e ações da tela: exibidos para todos; o backend valida cada operação -->
     <template id="modelo-item">
         <div class="row g-2 align-items-end mb-2 item-pedido">
             <div class="col-sm-7">
@@ -223,11 +219,8 @@
                 evento.preventDefault();
                 mostrarErro('');
 
+                // O pedido vai ao servidor mesmo sem cliente válido: a permissão é checada antes da validação
                 const clienteId = clienteSelecionadoId();
-                if (!clienteId) {
-                    mostrarErro('Cliente não encontrado. Digite o nome ou o telefone e escolha um cliente da lista.');
-                    return;
-                }
 
                 const itens = Array.from(listaItens.querySelectorAll('.item-pedido')).map(linha => ({
                     produtoId: linha.querySelector('.item-produto').value,
@@ -245,6 +238,10 @@
 
                 if (response.ok) {
                     window.location.reload();
+                } else if (acessoNegado(response)) {
+                    return;
+                } else if (!clienteId) {
+                    mostrarErro('Cliente não encontrado. Digite o nome ou o telefone e escolha um cliente da lista.');
                 } else {
                     mostrarErro(await extrairErro(response, 'Erro ao registrar o pedido.'));
                 }
@@ -258,7 +255,7 @@
                     });
                     if (response.ok) {
                         window.location.reload();
-                    } else {
+                    } else if (!acessoNegado(response)) {
                         mostrarErro(await extrairErro(response, 'Erro ao alterar o status.'));
                     }
                 });
@@ -277,7 +274,7 @@
                     });
                     if (response.ok) {
                         window.location.reload();
-                    } else {
+                    } else if (!acessoNegado(response)) {
                         mostrarErro(await extrairErro(response, 'Erro ao cancelar o pedido.'));
                     }
                 });
@@ -296,14 +293,13 @@
                     });
                     if (response.ok) {
                         window.location.reload();
-                    } else {
+                    } else if (!acessoNegado(response)) {
                         mostrarErro(await extrairErro(response, 'Erro ao aplicar o desconto.'));
                     }
                 });
             });
         })();
     </script>
-    </th:block>
 </div>
 
 </body>

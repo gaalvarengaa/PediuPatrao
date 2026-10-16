@@ -11,17 +11,15 @@
         <h2 class="fw-bold mb-0">
             <i class="bi bi-boxes me-2 text-primary"></i>Produtos
         </h2>
-        <button class="btn btn-primary" type="button" id="btn-novo-produto"
-                sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
+        <button class="btn btn-primary" type="button" id="btn-novo-produto">
             <i class="bi bi-plus-lg"></i> Novo produto
         </button>
     </div>
 
     <div class="alert alert-danger" id="produto-erro" role="alert" style="display: none;"></div>
 
-    <!-- Formulário de cadastro/edição (somente ADMIN e GERENTE alteram produtos) -->
-    <div class="card shadow-sm mb-4" id="produto-form-card" style="display: none; max-width: 600px;"
-         sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
+    <!-- Formulário de cadastro/edição (o backend só aceita alterações de ADMIN e GERENTE) -->
+    <div class="card shadow-sm mb-4" id="produto-form-card" style="display: none; max-width: 600px;">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3" id="produto-form-titulo">Novo produto</h5>
             <form id="produtoForm">
@@ -72,7 +70,7 @@
                         <th>Tipo</th>
                         <th>Preço</th>
                         <th>Ativo</th>
-                        <th class="text-end pe-4" sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">Ações</th>
+                        <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,7 +89,7 @@
                             <span class="badge" th:classappend="${produto.ativo} ? 'bg-success' : 'bg-secondary'"
                                   th:text="${produto.ativo} ? 'Sim' : 'Não'"></span>
                         </td>
-                        <td class="text-end pe-4" sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
+                        <td class="text-end pe-4">
                             <button type="button" class="btn btn-sm btn-outline-primary me-1 btn-editar-produto">
                                 <i class="bi bi-pencil-fill"></i> Editar
                             </button>
@@ -105,7 +103,7 @@
         </div>
     </div>
 
-    <script sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
+    <script>
         (function () {
             const API_PRODUTOS = '/api/produtos';
             const card = document.getElementById('produto-form-card');
@@ -163,7 +161,7 @@
                     });
                     if (response.ok) {
                         window.location.reload();
-                    } else {
+                    } else if (!acessoNegado(response)) {
                         const corpo = await response.json().catch(() => ({}));
                         mostrarErro(corpo.erro || 'Erro ao excluir o produto.');
                     }
@@ -190,7 +188,7 @@
 
                 if (response.ok) {
                     window.location.reload();
-                } else {
+                } else if (!acessoNegado(response)) {
                     const corpo = await response.json().catch(() => ({}));
                     mostrarErro(corpo.erro || 'Erro ao salvar o produto.');
                 }

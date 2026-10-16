@@ -15,6 +15,7 @@ import com.umc.pediupatrao.service.PedidoService;
 import com.umc.pediupatrao.service.ProdutoService;
 import com.umc.pediupatrao.service.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -59,6 +62,14 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("content", "home :: content");
+        return "layout";
+    }
+
+    // Página exibida quando o Spring Security nega o acesso (navegação ou resposta 403 das APIs)
+    @RequestMapping("/acesso-negado")
+    public String acessoNegado(HttpServletResponse response, Model model) {
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        model.addAttribute("content", "acesso-negado :: content");
         return "layout";
     }
 

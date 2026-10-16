@@ -67,7 +67,7 @@ public class SecurityConfig {
                 }))
                 .httpBasic(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/login", "/error", "/acesso-negado", "/css/**", "/js/**", "/images/**").permitAll()
 
                         // Usuarios
                         .requestMatchers("/usuarios/**", "/api/usuarios/**").hasRole("ADMIN")
@@ -115,7 +115,7 @@ public class SecurityConfig {
 
     /**
      * Registra no log toda tentativa de acesso indevido (sem dados sensíveis) e
-     * responde 403 em JSON para as APIs; nas páginas exibe a tela de erro.
+     * responde 403 em JSON para as APIs; nas páginas exibe a tela de acesso negado.
      */
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
@@ -134,7 +134,9 @@ public class SecurityConfig {
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"erro\":\"" + mensagem + "\"}");
             } else {
-                response.sendError(HttpStatus.FORBIDDEN.value());
+                // Páginas: exibe a tela de acesso negado mantendo o status 403
+                response.setStatus(HttpStatus.FORBIDDEN.value());
+                request.getRequestDispatcher("/acesso-negado").forward(request, response);
             }
         };
     }
