@@ -49,6 +49,8 @@ Quando não há nenhum produto cadastrado, também é criado um cardápio básic
 
 As regras são aplicadas no backend (`SecurityConfig` e `@PreAuthorize`). Esconder botões na tela não é suficiente, e requisições não autorizadas recebem 403.
 
+Por isso a interface mostra todas as opções para os três perfis. Quem não tem permissão pode clicar, mas o servidor recusa a operação e o usuário vai para a página **Acesso negado** (`/acesso-negado`, status 403). Nas páginas, o redirecionamento é feito pelo `AccessDeniedHandler` do `SecurityConfig`. Nas ações via API (desconto, cancelamento, status, exclusões), o JavaScript redireciona quando recebe 403.
+
 ## Requisitos implementados
 
 **RF01 — Usuários e permissões.** Três perfis, gestão de usuários restrita ao ADMIN, proteção contra autoelevação (ninguém altera o próprio perfil, renomeia a própria conta ou exclui o próprio usuário) e proteção das APIs por perfil.
@@ -109,13 +111,13 @@ Os testes também rodam em JDKs mais novos que o 21: o `maven-surefire-plugin` j
 
 - Perfis passaram de ADMIN/USER para ADMIN, GERENTE e ATENDENTE.
 - Novas entidades e serviços para pedidos (itens, valores, responsável, cancelamento e desconto) e para auditoria.
-- Telas de pedidos, produtos e auditoria reescritas, com ações conforme o perfil.
+- Telas de pedidos, produtos e auditoria reescritas, com cada ação validada no servidor conforme o perfil.
 - Validação de dados de produtos e clientes no serviço, com mensagens de erro exibidas nas telas.
-- Correção de XSS na lista de clientes: os dados passaram a ser inseridos como texto, e os botões aparecem conforme o perfil.
+- Correção de XSS na lista de clientes: os dados passaram a ser inseridos como texto.
 - Respostas de acesso negado em JSON nas APIs (403) e registro em log das tentativas, incluindo falhas de CSRF.
 - Testes automatizados de regras de negócio e de permissões.
 - Tela de login com mensagens de senha inválida e de saída do sistema.
-- Telas de produtos e pedidos montadas conforme o perfil: o ATENDENTE não vê ações de produtos, e o ADMIN não recebe a lista de clientes ao consultar pedidos.
+- Todas as opções aparecem para os três perfis; ações sem permissão são recusadas pelo servidor e levam à página **Acesso negado** (403). O ADMIN não recebe a lista de clientes ao consultar pedidos.
 - Busca do cliente no novo pedido digitando o nome ou o telefone.
 - Remoção de templates e links que não funcionavam (`produto-form.html`, `sidebar_1.html`, `admin.html`, `configuracoes.html`, rotas `/admin`, `/teste` e `/configuracoes`, links de funcionários, entregadores e horários).
 - Remoção dos arquivos do tema AdminLTE (`static/plugins` e `static/dist`, cerca de 2.050 arquivos) que não eram usados por nenhuma página, e de dependências e configurações sem efeito (`lombok`, `jakarta.persistence-api`, `spring.security.user.*`).
