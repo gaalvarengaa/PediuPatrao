@@ -75,6 +75,9 @@ public class SecurityConfig {
                         // Auditoria
                         .requestMatchers("/auditoria", "/auditoria/**", "/api/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
 
+                        // Dashboard
+                        .requestMatchers("/dashboard", "/dashboard/**", "/api/dashboard/**").hasAnyRole("ADMIN", "GERENTE")
+
                         // Pedidos
                         .requestMatchers("/api/pedidos/*/desconto", "/api/pedidos/*/cancelar").hasRole("GERENTE")
                         .requestMatchers(HttpMethod.GET, "/pedidos/**", "/api/pedidos/**").hasAnyRole("ADMIN", "GERENTE", "ATENDENTE")
