@@ -266,7 +266,9 @@ public class PedidoService {
         }
 
         BigDecimal preco = BigDecimal.valueOf(produto.getPreco()).setScale(2, RoundingMode.HALF_UP);
-        return new ItemPedido(produto.getId(), produto.getNome(), quantidade, preco);
+        ItemPedido itemPedido = new ItemPedido(produto.getId(), produto.getNome(), quantidade, preco);
+        itemPedido.setTipoProduto(produto.getTipo());
+        return itemPedido;
     }
 
     /** Subtotal = soma dos itens; desconto = subtotal x percentual; total = subtotal - desconto. */
