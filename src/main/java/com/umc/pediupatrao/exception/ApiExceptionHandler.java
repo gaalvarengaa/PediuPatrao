@@ -4,6 +4,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +36,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, String>> tipoInvalido(MethodArgumentTypeMismatchException e) {
         return erro(HttpStatus.BAD_REQUEST, "Valor inválido para o parâmetro '" + e.getName() + "'.");
+    }
+
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<Map<String, String>> filtroInvalido(BindException e) {
+        String campo = e.getFieldError() != null ? e.getFieldError().getField() : e.getObjectName();
+        return erro(HttpStatus.BAD_REQUEST, "Valor inválido para o parâmetro '" + campo + "'.");
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
