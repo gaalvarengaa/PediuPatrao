@@ -11,12 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Consulta dos registros de auditoria (somente leitura). O acesso é restrito a
- * ADMIN e GERENTE no SecurityConfig; não há endpoints de alteração ou exclusão.
- *
- * Exemplo: GET /api/auditoria?entidade=Cliente&operacao=ALTERACAO_CLIENTE&de=2026-10-01&ate=2026-10-31
- */
 @RestController
 @RequestMapping("/api/auditoria")
 public class AuditoriaController {

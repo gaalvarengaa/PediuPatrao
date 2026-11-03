@@ -94,7 +94,7 @@ O dashboard deve obter todos os dados pelos endpoints da API, descritos neste do
 | RN05   | O faturamento de um pedido é o valor total, já com desconto. No ranking, o faturamento de um produto é a soma dos subtotais dos seus itens, sem o desconto, que é aplicado sobre o pedido inteiro. |
 | RN06   | Com o filtro de produto ou de categoria, os indicadores e gráficos consideram o pedido inteiro, e o ranking considera apenas os itens que atendem ao filtro. |
 | RN07   | A categoria do produto é copiada para o item no registro do pedido, preservando o histórico. Em pedidos antigos, é obtida pelo cadastro do produto. Itens cujo produto não existe mais não atendem ao filtro de categoria. |
-| RN08   | Status de versões antigas são convertidos: `EM_PREPARO` para Em preparação e `ENTREGUE` para Finalizado. Valores ausentes em pedidos antigos são considerados zero. |
+| RN08   | Status de versões antigas são convertidos: `EM_PREPARO` para Em preparação e `ENTREGUE` para Finalizado. Valores ausentes em pedidos antigos são considerados zero, e pedidos sem data de entrada ficam fora das consultas. |
 
 ## Requisitos não funcionais
 

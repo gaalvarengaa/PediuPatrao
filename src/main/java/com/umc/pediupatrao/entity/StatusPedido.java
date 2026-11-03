@@ -2,11 +2,6 @@ package com.umc.pediupatrao.entity;
 
 import java.util.List;
 
-/**
- * Fluxo obrigatório do pedido:
- * RECEBIDO -> EM_PREPARACAO -> PRONTO -> (SAIU_PARA_ENTREGA | RETIRADO) -> FINALIZADO.
- * CANCELADO é excepcional e só é atingido pela operação de cancelamento do gerente.
- */
 public enum StatusPedido {
     RECEBIDO("Recebido"),
     EM_PREPARACAO("Em preparação"),
@@ -26,7 +21,6 @@ public enum StatusPedido {
         return descricao;
     }
 
-    /** Próximos status alcançáveis pela atualização normal de status (sem cancelamento). */
     public List<StatusPedido> getProximosStatus() {
         return switch (this) {
             case RECEBIDO -> List.of(EM_PREPARACAO);
@@ -41,17 +35,14 @@ public enum StatusPedido {
         return getProximosStatus().contains(novo);
     }
 
-    /** Status que representam a saída do pedido da pizzaria. */
     public boolean isSaida() {
         return this == SAIU_PARA_ENTREGA || this == RETIRADO;
     }
 
-    /** Cancelamento e desconto só são permitidos antes da saída. */
     public boolean isAntesDaSaida() {
         return this == RECEBIDO || this == EM_PREPARACAO || this == PRONTO;
     }
 
-    /** Converte valores gravados pela versão anterior do sistema (status em texto livre). */
     public static StatusPedido deValorLegado(String valor) {
         if (valor == null || valor.isBlank()) {
             return RECEBIDO;

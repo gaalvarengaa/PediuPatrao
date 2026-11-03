@@ -11,7 +11,6 @@ public class Cliente {
     private String nome;
     private String telefone;
 
-    // Endereço completo
     private String cep;
     private String logradouro;
     private String numero;
@@ -20,7 +19,6 @@ public class Cliente {
     private String cidade;
     private String estado;
 
-    // Mantido para compatibilidade com dados antigos
     private String endereco;
 
     public String getId() { return id; }

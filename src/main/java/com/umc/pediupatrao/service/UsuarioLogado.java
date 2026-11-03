@@ -6,9 +6,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-/**
- * Identifica o usuário autenticado na requisição atual.
- */
 @Component
 public class UsuarioLogado {
 
