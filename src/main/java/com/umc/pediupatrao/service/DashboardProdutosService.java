@@ -49,7 +49,6 @@ public class DashboardProdutosService {
                 .toList();
     }
 
-    // Os pedidos vêm do mais antigo para o mais recente, então prevalece o nome mais recente do produto
     private void acumular(Map<String, Acumulado> produtos, ItemPedido item) {
         String chave = item.getProdutoId() != null ? item.getProdutoId() : item.getNomeProduto();
         Acumulado acumulado = produtos.computeIfAbsent(chave, k -> new Acumulado());

@@ -34,9 +34,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-/**
- * Garante o formato das respostas e o tratamento de parâmetros descritos na documentação da API.
- */
 @WebMvcTest(DashboardController.class)
 @Import(SecurityConfig.class)
 class DashboardControllerTest {

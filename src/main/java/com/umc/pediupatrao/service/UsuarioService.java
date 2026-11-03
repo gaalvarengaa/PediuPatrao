@@ -19,17 +19,14 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Busca um usuário por ID
     public Optional<Usuario> buscarPorId(String id) {
         return usuarioRepository.findById(id);
     }
 
-    // Busca um usuário por username
     public Optional<Usuario> buscarPorUsername(String username) {
         return usuarioRepository.findByUsername(username);
     }
 
-    // Salva um novo usuário (criptografando a senha)
     public Usuario salvarUsuario(Usuario usuario) {
         String username = validarUsername(usuario.getUsername(), null);
         validarPerfil(usuario.getRole());
@@ -45,7 +42,6 @@ public class UsuarioService {
         return usuarioRepository.save(novo);
     }
 
-    // Deleta um usuário pelo ID
     public void deletarUsuario(String id, String usernameLogado) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
@@ -57,12 +53,10 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    // Lista todos os usuários
     public Iterable<Usuario> listarTodos() {
         return usuarioRepository.findAll();
     }
 
-    // Atualiza o usuário
     public Usuario atualizarUsuario(String id, Usuario usuarioAtualizado, String usernameLogado) {
         Usuario usuarioExistente = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
@@ -75,8 +69,6 @@ public class UsuarioService {
         }
 
         String novoUsername = validarUsername(usuarioAtualizado.getUsername(), id);
-        // A sessão identifica o usuário pelo username: renomear a própria conta permitiria
-        // escapar das verificações acima (alterar o próprio perfil ou excluir a própria conta)
         if (proprioUsuario && !novoUsername.equals(usuarioExistente.getUsername())) {
             throw new IllegalArgumentException("Você não pode alterar o próprio username.");
         }
@@ -84,7 +76,6 @@ public class UsuarioService {
         usuarioExistente.setUsername(novoUsername);
         usuarioExistente.setRole(usuarioAtualizado.getRole());
 
-        // Só atualiza a senha se uma nova foi informada
         if (usuarioAtualizado.getPassword() != null && !usuarioAtualizado.getPassword().isBlank()) {
             usuarioExistente.setPassword(passwordEncoder.encode(usuarioAtualizado.getPassword()));
         }

@@ -60,7 +60,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF ativo para sessao do navegador; chamadas com Basic Auth nao usam cookie
                 .csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
                     String auth = request.getHeader("Authorization");
                     return auth != null && auth.startsWith("Basic ");
@@ -69,28 +68,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/error", "/acesso-negado", "/css/**", "/js/**", "/images/**").permitAll()
 
-                        // Usuarios
                         .requestMatchers("/usuarios/**", "/api/usuarios/**").hasRole("ADMIN")
 
-                        // Auditoria
                         .requestMatchers("/auditoria", "/auditoria/**", "/api/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
 
-                        // Dashboard
                         .requestMatchers("/dashboard", "/dashboard/**", "/api/dashboard/**").hasAnyRole("ADMIN", "GERENTE")
 
-                        // Pedidos
                         .requestMatchers("/api/pedidos/*/desconto", "/api/pedidos/*/cancelar").hasRole("GERENTE")
                         .requestMatchers(HttpMethod.GET, "/pedidos/**", "/api/pedidos/**").hasAnyRole("ADMIN", "GERENTE", "ATENDENTE")
                         .requestMatchers(HttpMethod.POST, "/api/pedidos").hasAnyRole("GERENTE", "ATENDENTE")
                         .requestMatchers(HttpMethod.PUT, "/api/pedidos/*/status").hasAnyRole("GERENTE", "ATENDENTE")
                         .requestMatchers("/pedidos/**", "/api/pedidos/**").hasAnyRole("GERENTE", "ATENDENTE")
 
-                        // Clientes
                         .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").hasRole("GERENTE")
                         .requestMatchers(HttpMethod.GET, "/clientes", "/api/clientes/**").hasAnyRole("GERENTE", "ATENDENTE")
                         .requestMatchers("/clientes/**", "/api/clientes/**").hasRole("ATENDENTE")
 
-                        // Produtos
                         .requestMatchers(HttpMethod.GET, "/produtos/**", "/api/produtos/**").authenticated()
                         .requestMatchers("/produtos/**", "/api/produtos/**").hasAnyRole("ADMIN", "GERENTE")
 
@@ -116,10 +109,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Registra no log toda tentativa de acesso indevido (sem dados sensíveis) e
-     * responde 403 em JSON para as APIs; nas páginas exibe a tela de acesso negado.
-     */
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, ex) -> {
@@ -137,7 +126,6 @@ public class SecurityConfig {
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"erro\":\"" + mensagem + "\"}");
             } else {
-                // Páginas: exibe a tela de acesso negado mantendo o status 403
                 response.setStatus(HttpStatus.FORBIDDEN.value());
                 request.getRequestDispatcher("/acesso-negado").forward(request, response);
             }
@@ -147,7 +135,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
-            response.sendRedirect("/"); // Redireciona para a página inicial após login bem-sucedido
+            response.sendRedirect("/");
         };
     }
 }

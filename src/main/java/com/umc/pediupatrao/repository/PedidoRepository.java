@@ -11,7 +11,6 @@ public interface PedidoRepository extends MongoRepository<Pedido, String> {
 
     boolean existsByClienteId(String clienteId);
 
-    /** Pedidos com entrada a partir de inicio e antes de fim, do mais antigo para o mais recente. */
     @Query(value = "{ 'dataHoraEntrada': { $gte: ?0, $lt: ?1 } }", sort = "{ 'dataHoraEntrada': 1 }")
     List<Pedido> buscarPorPeriodo(LocalDateTime inicio, LocalDateTime fim);
 }

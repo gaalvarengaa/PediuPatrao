@@ -23,9 +23,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Garante que o acesso à API do dashboard é restrito a ADMIN e GERENTE no backend.
- */
 @WebMvcTest(DashboardController.class)
 @Import(SecurityConfig.class)
 class DashboardPermissoesTest {

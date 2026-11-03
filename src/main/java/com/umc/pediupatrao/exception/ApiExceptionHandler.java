@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-/**
- * Converte as exceções das APIs REST em respostas JSON padronizadas.
- * Acesso negado não é tratado aqui: segue para o Spring Security (403).
- */
 @RestControllerAdvice(annotations = RestController.class)
 public class ApiExceptionHandler {
 

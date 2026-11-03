@@ -199,7 +199,6 @@ class PedidoServiceTest {
                 .isInstanceOf(RegraNegocioException.class);
     }
 
-    /** Pedido de 2 x R$ 25,00 (subtotal R$ 50,00) no status informado. */
     private Pedido pedidoEm(StatusPedido status) {
         Pedido pedido = new Pedido();
         pedido.setId("id");

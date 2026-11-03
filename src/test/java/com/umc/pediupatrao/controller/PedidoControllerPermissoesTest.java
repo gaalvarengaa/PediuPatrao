@@ -24,9 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Garante que as restrições de perfil da API de pedidos são aplicadas no backend.
- */
 @WebMvcTest(PedidoController.class)
 @Import(SecurityConfig.class)
 class PedidoControllerPermissoesTest {

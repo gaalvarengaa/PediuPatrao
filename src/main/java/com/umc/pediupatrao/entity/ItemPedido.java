@@ -2,10 +2,6 @@ package com.umc.pediupatrao.entity;
 
 import java.math.BigDecimal;
 
-/**
- * Item do pedido. Nome, categoria e preço são copiados do produto no momento do registro,
- * preservando o histórico mesmo que o produto seja alterado depois.
- */
 public class ItemPedido {
 
     private String produtoId;

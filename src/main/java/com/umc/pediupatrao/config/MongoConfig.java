@@ -16,7 +16,6 @@ public class MongoConfig {
         return new MongoCustomConversions(List.of(new StatusPedidoReadingConverter()));
     }
 
-    /** Permite ler pedidos antigos gravados com status em texto livre (ex.: EM_PREPARO). */
     @ReadingConverter
     static class StatusPedidoReadingConverter implements Converter<String, StatusPedido> {
         @Override

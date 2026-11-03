@@ -16,12 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Dados do dashboard administrativo (somente leitura). Os parâmetros de FiltroDashboard
- * valem para todos os endpoints. O acesso é restrito a ADMIN e GERENTE no SecurityConfig.
- *
- * Exemplo: GET /api/dashboard/vendas?de=2026-10-01&ate=2026-10-31&agrupamento=SEMANA
- */
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {

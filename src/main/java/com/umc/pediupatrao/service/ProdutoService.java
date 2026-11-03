@@ -24,10 +24,6 @@ public class ProdutoService {
         return produtoRepository.findAll();
     }
 
-    /**
-     * Cria o produto (sem ID) ou atualiza o existente. Produtos novos entram ativos
-     * quando o campo "ativo" não é informado.
-     */
     public Produto salvar(Produto dados) {
         Produto produto;
         if (dados.getId() == null || dados.getId().isBlank()) {
@@ -53,7 +49,6 @@ public class ProdutoService {
         if (!produtoRepository.existsById(id)) {
             throw new RecursoNaoEncontradoException("Produto não encontrado.");
         }
-        // Os itens dos pedidos já copiaram nome e preço, então o histórico é preservado
         produtoRepository.deleteById(id);
     }
 

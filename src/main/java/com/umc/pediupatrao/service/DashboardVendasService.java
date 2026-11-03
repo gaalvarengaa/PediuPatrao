@@ -27,7 +27,6 @@ public class DashboardVendasService {
     public VendasDashboard calcular(FiltroDashboard filtro, AgrupamentoVendas agrupamento) {
         DashboardConsultaService.Consulta consulta = consultaService.consultar(filtro);
 
-        // Todos os intervalos entram zerados, para que os dias sem venda apareçam no gráfico
         Map<String, Acumulado> intervalos = new LinkedHashMap<>();
         for (LocalDate dia = consulta.de(); !dia.isAfter(consulta.ate()); dia = dia.plusDays(1)) {
             intervalos.computeIfAbsent(chave(dia, agrupamento), k -> new Acumulado());

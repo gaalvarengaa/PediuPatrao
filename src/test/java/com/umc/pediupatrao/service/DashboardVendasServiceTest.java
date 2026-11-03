@@ -44,7 +44,6 @@ class DashboardVendasServiceTest {
 
     @Test
     void agrupaPorSemanaComInicioNaSegundaFeira() {
-        // 04/10/2026 é domingo e 05/10/2026 é segunda-feira
         comPedidos(pedido(LocalDateTime.of(2026, 10, 4, 12, 0), StatusPedido.FINALIZADO, "10.00"),
                 pedido(LocalDateTime.of(2026, 10, 5, 12, 0), StatusPedido.FINALIZADO, "20.00"));
 

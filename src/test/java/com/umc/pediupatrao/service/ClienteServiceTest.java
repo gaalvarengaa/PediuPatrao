@@ -25,9 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-/**
- * Auditoria das alterações cadastrais de clientes (endereço e telefone).
- */
 class ClienteServiceTest {
 
     @Mock

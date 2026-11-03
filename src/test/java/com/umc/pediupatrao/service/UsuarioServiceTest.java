@@ -16,9 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * Regras de administração segura dos perfis (proteção contra autoelevação e autoalteração).
- */
 class UsuarioServiceTest {
 
     private UsuarioRepository usuarioRepository;
@@ -46,7 +43,6 @@ class UsuarioServiceTest {
 
     @Test
     void naoPodeRenomearAPropriaConta() {
-        // Renomear a própria conta permitiria escapar das verificações feitas pelo username da sessão
         when(usuarioRepository.findById("u1")).thenReturn(Optional.of(usuario("u1", "admin", "ADMIN")));
         when(usuarioRepository.findByUsername("admin2")).thenReturn(Optional.empty());
 

@@ -37,10 +37,6 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
-    /**
-     * Exclui o cliente. Clientes com pedidos não podem ser excluídos, para preservar o
-     * histórico; a exclusão é auditada com os dados que o cliente tinha.
-     */
     public void excluir(String id) {
         Cliente existente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado."));
@@ -58,7 +54,6 @@ public class ClienteService {
         return clienteRepository.findById(id);
     }
 
-    // Método para salvar um novo cliente ou atualizar um cliente existente
     public Cliente salvar(Cliente cliente) {
         if (cliente.getId() == null || cliente.getId().isBlank()) {
             return incluir(cliente);
@@ -78,10 +73,6 @@ public class ClienteService {
         return salvo;
     }
 
-    /**
-     * Atualiza o cadastro e registra na auditoria somente os campos que mudaram,
-     * com os valores anteriores e novos (ex.: logradouro, telefone).
-     */
     public Cliente atualizar(String id, Cliente dados) {
         Cliente existente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado."));
@@ -110,7 +101,6 @@ public class ClienteService {
         destino.setCidade(limpar(origem.getCidade()));
         String estado = limpar(origem.getEstado());
         destino.setEstado(estado != null ? estado.toUpperCase() : null);
-        // Campo antigo: só é alterado quando enviado explicitamente
         if (origem.getEndereco() != null) {
             destino.setEndereco(limpar(origem.getEndereco()));
         }

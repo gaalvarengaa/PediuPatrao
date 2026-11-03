@@ -33,7 +33,6 @@ public class MongoInitConfig implements CommandLineRunner {
         if (!mongoTemplate.collectionExists("horariosAtendimento")) {
             mongoTemplate.createCollection("horariosAtendimento");
         }
-        // Consultas do dashboard filtram os pedidos pela data de entrada
         mongoTemplate.indexOps("pedidos").ensureIndex(new Index().on("dataHoraEntrada", Sort.Direction.ASC));
     }
 }

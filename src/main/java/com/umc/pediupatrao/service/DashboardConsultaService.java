@@ -16,10 +16,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import org.springframework.stereotype.Service;
 
-/**
- * Busca os pedidos do dashboard. Os valores são calculados em Java porque o Spring Data
- * grava BigDecimal como texto no MongoDB, o que impede somas diretas em agregações.
- */
 @Service
 public class DashboardConsultaService {
 
@@ -33,7 +29,6 @@ public class DashboardConsultaService {
         this.produtoRepository = produtoRepository;
     }
 
-    /** Resultado da consulta: período aplicado, pedidos encontrados e critério dos itens para o ranking. */
     public record Consulta(LocalDate de, LocalDate ate, List<Pedido> pedidos, Predicate<ItemPedido> itemAtende) {
     }
 
@@ -68,7 +63,6 @@ public class DashboardConsultaService {
         return criterio;
     }
 
-    // Pedidos antigos não têm a categoria no item; ela vem do cadastro do produto
     private String tipoDe(ItemPedido item, Map<String, String> tiposDoCadastro) {
         return item.getTipoProduto() != null ? item.getTipoProduto() : tiposDoCadastro.get(item.getProdutoId());
     }
@@ -93,7 +87,6 @@ public class DashboardConsultaService {
         return pedido.getItens() != null ? pedido.getItens() : List.of();
     }
 
-    // Pedidos antigos podem não ter valores gravados
     static BigDecimal valorOuZero(BigDecimal valor) {
         return valor != null ? valor : BigDecimal.ZERO;
     }
