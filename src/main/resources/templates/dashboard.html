@@ -7,6 +7,23 @@
 <div th:fragment="content" id="dashboard">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <h2 class="mb-0"><i class="bi bi-graph-up"></i> Dashboard de vendas</h2>
+        <div class="d-flex align-items-center gap-2">
+            <span id="indicador-carregando" class="spinner-border spinner-border-sm text-primary d-none" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </span>
+            <span class="small text-muted" id="ultima-atualizacao">Carregando dados...</span>
+            <button type="button" id="atualizar" class="btn btn-outline-primary btn-sm" title="Atualizar agora">
+                <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    <div id="mensagem-erro" class="alert alert-danger d-flex align-items-start gap-2 d-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>
+            <div id="mensagem-erro-texto"></div>
+            <div class="small" id="mensagem-erro-detalhe"></div>
+        </div>
     </div>
 
     <form id="filtros" class="card card-body mb-4">
@@ -99,6 +116,12 @@
         </div>
     </div>
 
+    <div id="sem-dados" class="alert alert-info d-none" role="status">
+        <i class="bi bi-info-circle"></i>
+        Nenhum pedido encontrado para o período e os filtros selecionados.
+    </div>
+
+    <div id="dados">
     <div class="card mb-4">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span class="fw-semibold">Análise de vendas</span>
@@ -112,7 +135,10 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="row g-4">
+            <div id="sem-vendas" class="text-center text-muted py-5 d-none">
+                Sem vendas no período. Pedidos cancelados não entram nos gráficos.
+            </div>
+            <div class="row g-4" id="graficos">
                 <div class="col-12 col-xl-6">
                     <div class="small text-muted mb-1">Faturamento</div>
                     <div class="grafico"><canvas id="grafico-faturamento"></canvas></div>
@@ -157,6 +183,8 @@
                 </div>
             </div>
         </div>
+    </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>

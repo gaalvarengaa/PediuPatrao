@@ -72,6 +72,11 @@ body {
     height: 280px;
 }
 
+#dashboard.carregando .card {
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
 #dashboard .status-barra {
     height: 6px;
 }
