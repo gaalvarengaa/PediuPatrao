@@ -223,3 +223,168 @@ Resposta `200`:
   { "produtoId": "6721f0a1c4", "nome": "Refrigerante 2L", "quantidade": 12, "faturamento": 144.00 }
 ]
 ```
+
+## Tela do dashboard
+
+A tela fica em `/dashboard`, no menu lateral, e segue o mesmo layout das demais páginas do sistema (Thymeleaf e Bootstrap). Os dados são buscados pelo JavaScript (`static/js/dashboard.js`) nos quatro endpoints acima, e os gráficos usam Chart.js.
+
+| Área da tela              | Requisito | Endpoint                                   |
+|---------------------------|-----------|--------------------------------------------|
+| Filtros                   | RF05      | Opções de produto e categoria em `GET /api/produtos` |
+| Cards de indicadores      | RF01      | `/api/dashboard/indicadores`              |
+| Gráficos de faturamento e pedidos, por dia, semana ou mês | RF02 | `/api/dashboard/vendas` |
+| Situação dos pedidos      | RF03      | `/api/dashboard/status`                   |
+| Produtos mais vendidos (Top 5, 10 ou 20) | RF04 | `/api/dashboard/produtos-mais-vendidos` |
+
+Comportamento do RF07 na tela:
+
+- Atualização automática a cada 60 segundos, pausada quando a aba não está visível, e pelo botão **Atualizar**. O horário da última atualização aparece no topo.
+- A atualização usa os filtros aplicados pelo botão **Filtrar**, e não valores digitados e ainda não aplicados.
+- Durante a carga aparece um indicador e os cards ficam esmaecidos. Uma nova carga não começa enquanto outra está em andamento.
+- Sem pedidos no período, a tela mostra uma mensagem no lugar dos gráficos e do ranking.
+- Em caso de erro, a mensagem da API aparece no topo e os últimos dados continuam na tela, com o horário em que foram carregados.
+- As chamadas enviam o cabeçalho `X-Requested-With: XMLHttpRequest`. Assim, com a sessão expirada, a API responde 401 sem pedir senha ao navegador, e a tela leva o usuário ao login. Com 403, leva à página de acesso negado.
+- Textos vindos da API são inseridos com `textContent`, nunca como HTML.
+
+### Dados de exemplo
+
+Com o perfil `demo` (`sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo`), um banco sem pedidos recebe clientes, produtos e cerca de 750 pedidos dos últimos 90 dias, com picos no almoço e no jantar, descontos, cancelamentos e pedidos em andamento no dia atual. Os valores seguem as mesmas regras do registro de pedidos: o total é o subtotal menos o desconto. Sem o perfil, nada é criado.
+
+## Evidências de testes
+
+### Testes automatizados
+
+Executados com `sh ./mvnw test`: 100 testes, nenhuma falha. Os testes não dependem do MongoDB: os serviços usam repositórios simulados (Mockito) e os controllers usam `@WebMvcTest` com o `SecurityConfig` real.
+
+| Classe de teste                               | Testes | O que verifica |
+|-----------------------------------------------|--------|----------------|
+| `DashboardIndicadoresServiceTest`             | 4      | Faturamento, pedidos, ticket médio, cancelamentos e descontos; pedidos antigos sem valores contam como zero (RF01, RN01, RN04, RN08) |
+| `DashboardVendasServiceTest`                  | 4      | Agrupamento por dia, semana e mês, com intervalos zerados e sem cancelados (RF02, RN01, RN03) |
+| `DashboardSituacaoServiceTest`                | 1      | Todas as situações aparecem, inclusive com zero (RF03) |
+| `DashboardProdutosServiceTest`                | 7      | Ordenação do ranking, desempate, limite e filtros por item (RF04, RN05, RN06) |
+| `DashboardConsultaServiceTest`                | 7      | Período padrão, validação de datas, filtros e pedidos antigos (RF05, RN02, RN07, RN08) |
+| `DashboardControllerTest`                     | 10     | Respostas JSON dos endpoints e erros 400 e 422 (RF06, RF07) |
+| `DashboardPermissoesTest`                     | 5      | 401 sem login, 401 sem pedir senha nas chamadas da tela, 403 para ATENDENTE, apenas GET (RNF01) |
+| `DashboardPaginaTest`                         | 3      | Acesso à página `/dashboard` por perfil |
+| `GeradorPedidosDemoTest`                      | 7      | Consistência dos pedidos de exemplo |
+| Demais classes do sistema                     | 52     | Pedidos, clientes, usuários, auditoria e permissões |
+
+### Testes da API com o sistema em execução
+
+Executados em 03/11/2026 com o MongoDB local e os dados do perfil `demo`. Sem datas, o período é de 05/10/2026 a 03/11/2026.
+
+**Indicadores (RF01)**
+
+```bash
+curl -u gerente:teste123 "http://localhost:8080/api/dashboard/indicadores"
+```
+
+```json
+{
+  "faturamento": 21751.40,
+  "pedidos": 262,
+  "ticketMedio": 83.02,
+  "cancelamentos": 16,
+  "descontos": 242.60
+}
+```
+
+**Indicadores filtrados pela categoria Pizza (RF05, RN06)**
+
+```bash
+curl -u gerente:teste123 "http://localhost:8080/api/dashboard/indicadores?tipo=Pizza"
+```
+
+```json
+{
+  "faturamento": 20841.60,
+  "pedidos": 214,
+  "ticketMedio": 97.39,
+  "cancelamentos": 13,
+  "descontos": 231.40
+}
+```
+
+**Vendas por mês nos últimos 90 dias (RF02)**
+
+```bash
+curl -u gerente:teste123 "http://localhost:8080/api/dashboard/vendas?de=2026-08-06&ate=2026-11-03&agrupamento=MES"
+```
+
+```json
+{
+  "agrupamento": "MES",
+  "pontos": [
+    {
+      "periodo": "2026-08",
+      "faturamento": 17383.30,
+      "pedidos": 187
+    },
+    {
+      "periodo": "2026-09",
+      "faturamento": 17748.20,
+      "pedidos": 218
+    },
+    {
+      "periodo": "2026-10",
+      "faturamento": 23038.15,
+      "pedidos": 275
+    },
+    {
+      "periodo": "2026-11",
+      "faturamento": 2040.85,
+      "pedidos": 23
+    }
+  ]
+}
+```
+
+**Ranking com limite 3 (RF04)**
+
+```bash
+curl -u gerente:teste123 "http://localhost:8080/api/dashboard/produtos-mais-vendidos?limite=3"
+```
+
+```json
+[
+  {
+    "produtoId": "6ae9c2d7c0920c1c23cd9ce3",
+    "nome": "Pizza Margherita",
+    "quantidade": 94,
+    "faturamento": 3948.00
+  },
+  {
+    "produtoId": "6ae9c2d7c0920c1c23cd9ce8",
+    "nome": "Pizza Frango com Catupiry",
+    "quantidade": 82,
+    "faturamento": 4100.00
+  },
+  {
+    "produtoId": "6ae9c2d7c0920c1c23cd9ce2",
+    "nome": "Pizza Calabresa",
+    "quantidade": 79,
+    "faturamento": 3555.00
+  }
+]
+```
+
+**Erros e permissões (RF07, RNF01)**
+
+| Requisição | Status | Resposta |
+|------------|--------|----------|
+| `indicadores?de=2026-11-03&ate=2026-10-05` (datas invertidas) | 422 | `"erro": "A data inicial não pode ser posterior à data final."` |
+| `indicadores?status=VOANDO` | 400 | `"erro": "Valor inválido para o parâmetro 'status'."` |
+| `produtos-mais-vendidos?limite=99` | 422 | `"erro": "O limite deve estar entre 1 e 50."` |
+| Sem login, com `X-Requested-With` | 401 | Sem corpo |
+| Usuário `atendente` | 403 | `"erro": "Acesso negado: seu perfil não tem permissão para esta operação."` |
+| `indicadores?de=2020-01-01&ate=2020-01-31` (sem pedidos) | 200 | Todos os valores zerados |
+
+### Tela em funcionamento
+
+Usuário `gerente`, últimos 30 dias, dados do perfil `demo`.
+
+![Dashboard no computador](img/dashboard-desktop.png)
+
+No celular, os blocos ficam um abaixo do outro:
+
+<img src="img/dashboard-celular.png" alt="Dashboard no celular" width="320">
