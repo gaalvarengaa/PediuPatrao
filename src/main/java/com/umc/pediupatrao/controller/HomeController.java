@@ -65,6 +65,12 @@ public class HomeController {
         return "layout";
     }
 
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        model.addAttribute("content", "dashboard :: content");
+        return "layout";
+    }
+
     @RequestMapping("/acesso-negado")
     public String acessoNegado(HttpServletResponse response, Model model) {
         response.setStatus(HttpStatus.FORBIDDEN.value());

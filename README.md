@@ -39,6 +39,18 @@ Troque essas senhas antes de usar o sistema em produção.
 
 Quando não há nenhum produto cadastrado, também é criado um cardápio básico para que os pedidos possam ser registrados de imediato: Pizza Calabresa (R$ 45,00), Pizza Margherita (R$ 42,00), Pizza Quatro Queijos (R$ 52,00), Refrigerante 2L (R$ 12,00) e Borda Recheada (R$ 8,00).
 
+### Pedidos de exemplo (perfil `demo`)
+
+Para ver o dashboard com dados, suba a aplicação com o perfil `demo`:
+
+```bash
+sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+```
+
+No Windows: `mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=demo`.
+
+Se o banco ainda não tiver pedidos, o perfil cria clientes e produtos de exemplo e cerca de 750 pedidos dos últimos 90 dias, com horários de pico no almoço e no jantar, descontos, cancelamentos e alguns pedidos em andamento no dia atual. Se já houver pedidos, nada é criado. Para gerar de novo, apague a coleção `pedidos` no MongoDB.
+
 ## Perfis e permissões
 
 | Perfil    | Pode                                                                                                  |
