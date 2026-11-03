@@ -23,8 +23,6 @@ public class DataInitializer {
         };
     }
 
-    // Cardápio básico para permitir registrar pedidos logo na primeira execução.
-    // Só é criado quando não há nenhum produto cadastrado.
     private void criarProdutosIniciais(ProdutoRepository repo) {
         if (repo.count() > 0) {
             return;

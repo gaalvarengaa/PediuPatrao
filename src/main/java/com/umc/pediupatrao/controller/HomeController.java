@@ -65,7 +65,12 @@ public class HomeController {
         return "layout";
     }
 
-    // Página exibida quando o Spring Security nega o acesso (navegação ou resposta 403 das APIs)
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        model.addAttribute("content", "dashboard :: content");
+        return "layout";
+    }
+
     @RequestMapping("/acesso-negado")
     public String acessoNegado(HttpServletResponse response, Model model) {
         response.setStatus(HttpStatus.FORBIDDEN.value());
@@ -73,9 +78,6 @@ public class HomeController {
         return "layout";
     }
 
-    // ========================
-    // USUÁRIOS
-    // ========================
     @GetMapping("/usuarios")
     public String listarUsuarios(Model model) {
         List<Usuario> usuarios = (List<Usuario>) usuarioService.listarTodos();
@@ -148,9 +150,6 @@ public class HomeController {
         return "redirect:/usuarios";
     }
 
-    // ========================
-    // PEDIDOS
-    // ========================
     @GetMapping("/pedidos")
     public String pedidos(Model model, HttpServletRequest request) {
         List<Pedido> pedidos = pedidoService.listarPedidos();
@@ -164,8 +163,6 @@ public class HomeController {
                 .filter(p -> Boolean.TRUE.equals(p.getAtivo()))
                 .toList();
 
-        // Lista completa de clientes (com telefone) só para quem registra pedidos;
-        // o ADMIN apenas consulta pedidos e vê somente o nome do cliente de cada um
         boolean registraPedidos = request.isUserInRole("GERENTE") || request.isUserInRole("ATENDENTE");
 
         model.addAttribute("pedidos", pedidos);
@@ -177,9 +174,6 @@ public class HomeController {
         return "layout";
     }
 
-    // ========================
-    // PRODUTOS
-    // ========================
     @GetMapping("/produtos")
     public String produtos(Model model) {
         List<Produto> produtos = produtoService.listarProdutos();
@@ -189,9 +183,6 @@ public class HomeController {
         return "layout";
     }
 
-    // ========================
-    // CLIENTES
-    // ========================
     @GetMapping("/clientes")
     public String clientes(Model model) {
         List<Cliente> clientes = clienteService.listarClientes();
@@ -255,7 +246,6 @@ public class HomeController {
         return "redirect:/clientes";
     }
 
-    // Volta ao formulário mantendo o que foi digitado e exibindo o motivo do erro
     private String reexibirFormularioCliente(Cliente cliente, String erro, Model model) {
         model.addAttribute("cliente", cliente);
         model.addAttribute("erro", erro);
@@ -263,9 +253,6 @@ public class HomeController {
         return "layout";
     }
 
-    // ========================
-    // AUDITORIA
-    // ========================
     @GetMapping("/auditoria")
     public String auditoria(@RequestParam(required = false) String entidade,
             @RequestParam(required = false) String entidadeId,

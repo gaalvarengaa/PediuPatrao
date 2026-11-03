@@ -16,29 +16,23 @@ public class Pedido {
     private List<ItemPedido> itens = new ArrayList<>();
     private StatusPedido status;
 
-    // Valores calculados exclusivamente no servidor
     private BigDecimal subtotal = BigDecimal.ZERO;
     private BigDecimal percentualDesconto = BigDecimal.ZERO;
     private BigDecimal valorDesconto = BigDecimal.ZERO;
     private BigDecimal valorTotal = BigDecimal.ZERO;
 
-    // Entrada
     private LocalDateTime dataHoraEntrada;
     private String responsavelEntrada;
 
-    // Saída (entrega ou retirada)
     private LocalDateTime dataHoraSaida;
     private String responsavelSaida;
 
-    // Finalização
     private LocalDateTime dataHoraFinalizacao;
     private String responsavelFinalizacao;
 
-    // Desconto
     private String descontoAplicadoPor;
     private LocalDateTime dataHoraDesconto;
 
-    // Cancelamento
     private String justificativaCancelamento;
     private String canceladoPor;
     private LocalDateTime dataHoraCancelamento;

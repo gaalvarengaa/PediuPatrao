@@ -19,28 +19,24 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    // Endpoint para listar todos os usuários
     @GetMapping
     public ResponseEntity<Iterable<Usuario>> listarTodos() {
         Iterable<Usuario> usuarios = usuarioService.listarTodos();
         return ResponseEntity.ok(usuarios);
     }
 
-    // Endpoint para buscar um usuário por ID
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> buscarPorId(@PathVariable String id) {
         Optional<Usuario> usuario = usuarioService.buscarPorId(id);
         return usuario.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
-    // Endpoint para criar um novo usuário
     @PostMapping
     public ResponseEntity<Usuario> criarUsuario(@RequestBody Usuario usuario) {
         Usuario salvo = usuarioService.salvarUsuario(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
     }
 
-    // Endpoint para atualizar um usuário
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> atualizarUsuario(@PathVariable String id, @RequestBody Usuario usuarioAtualizado,
             Principal principal) {
@@ -48,7 +44,6 @@ public class UsuarioController {
         return ResponseEntity.ok(usuario);
     }
 
-    // Endpoint para deletar um usuário
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarUsuario(@PathVariable String id, Principal principal) {
         usuarioService.deletarUsuario(id, principal.getName());

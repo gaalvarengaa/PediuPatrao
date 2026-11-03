@@ -68,6 +68,23 @@ class PedidoServiceTest {
     }
 
     @Test
+    void criarPedidoCopiaCategoriaDoProdutoParaOItem() {
+        Produto pizza = new Produto();
+        pizza.setId("p1");
+        pizza.setNome("Calabresa");
+        pizza.setTipo("Pizza");
+        pizza.setPreco(30.0);
+        pizza.setAtivo(true);
+        when(clienteRepository.existsById("c1")).thenReturn(true);
+        when(produtoRepository.findById("p1")).thenReturn(Optional.of(pizza));
+
+        Pedido pedido = pedidoService.criarPedido(
+                new NovoPedidoRequest("c1", List.of(new ItemPedidoRequest("p1", 1))));
+
+        assertThat(pedido.getItens().get(0).getTipoProduto()).isEqualTo("Pizza");
+    }
+
+    @Test
     void criarPedidoRejeitaProdutoInativo() {
         Produto inativo = new Produto();
         inativo.setId("p1");
@@ -182,7 +199,6 @@ class PedidoServiceTest {
                 .isInstanceOf(RegraNegocioException.class);
     }
 
-    /** Pedido de 2 x R$ 25,00 (subtotal R$ 50,00) no status informado. */
     private Pedido pedidoEm(StatusPedido status) {
         Pedido pedido = new Pedido();
         pedido.setId("id");

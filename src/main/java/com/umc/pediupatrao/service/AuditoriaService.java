@@ -23,10 +23,8 @@ public class AuditoriaService {
 
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
-    /** Campos que nunca são gravados na auditoria. */
     private static final Set<String> CAMPOS_PROIBIDOS = Set.of("password", "senha", "token");
 
-    /** Dados pessoais exibidos de forma parcial na consulta. */
     private static final Set<String> CAMPOS_MASCARADOS = Set.of("telefone");
 
     private final AuditoriaRepository auditoriaRepository;
@@ -55,11 +53,6 @@ public class AuditoriaService {
         return auditoriaRepository.insert(registro);
     }
 
-    /**
-     * Consulta os registros (mais recentes primeiro), com filtros opcionais.
-     * O período considera o dia inteiro de "de" até o fim do dia de "ate".
-     * Telefones são mascarados para limitar a exposição de dados pessoais.
-     */
     public List<RegistroAuditoria> consultar(String entidade, String entidadeId, String usuario,
             TipoOperacao operacao, LocalDate de, LocalDate ate) {
         if (de != null && ate != null && de.isAfter(ate)) {
@@ -79,9 +72,6 @@ public class AuditoriaService {
                 .toList();
     }
 
-    /**
-     * Compara dois mapas campo -> valor e devolve somente os campos que mudaram.
-     */
     public static List<CampoAlterado> compararCampos(Map<String, ?> antes, Map<String, ?> depois) {
         Set<String> campos = new LinkedHashSet<>();
         campos.addAll(antes.keySet());

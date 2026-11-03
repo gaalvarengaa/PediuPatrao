@@ -24,9 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Garante as restrições de perfil nas APIs de auditoria, usuários e clientes.
- */
 @WebMvcTest({AuditoriaController.class, UsuarioController.class, ClienteController.class})
 @Import(SecurityConfig.class)
 class AuditoriaUsuarioClientePermissoesTest {
@@ -48,7 +45,6 @@ class AuditoriaUsuarioClientePermissoesTest {
     @MockitoBean
     private UsuarioDetailsService usuarioDetailsService;
 
-    // ===== Auditoria =====
 
     @Test
     void adminEGerenteConsultamAuditoria() throws Exception {
@@ -73,7 +69,6 @@ class AuditoriaUsuarioClientePermissoesTest {
                 .andExpect(status().isMethodNotAllowed());
     }
 
-    // ===== Usuários =====
 
     @Test
     void somenteAdminGerenciaUsuarios() throws Exception {
@@ -94,7 +89,6 @@ class AuditoriaUsuarioClientePermissoesTest {
         verify(usuarioService, never()).salvarUsuario(any());
     }
 
-    // ===== Clientes =====
 
     @Test
     void atendenteCadastraCliente() throws Exception {

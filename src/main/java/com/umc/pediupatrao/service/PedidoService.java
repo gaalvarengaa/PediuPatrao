@@ -46,10 +46,6 @@ public class PedidoService {
         this.usuarioLogado = usuarioLogado;
     }
 
-    /**
-     * Registra a entrada do pedido. Preços vêm do cadastro de produtos e os valores
-     * são calculados aqui; nada disso é aceito da requisição.
-     */
     public Pedido criarPedido(NovoPedidoRequest dados) {
         if (dados == null || vazio(dados.clienteId())) {
             throw new RegraNegocioException("Informe o cliente do pedido.");
@@ -91,10 +87,6 @@ public class PedidoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado."));
     }
 
-    /**
-     * Avança o pedido no fluxo obrigatório. Na saída (entrega/retirada) e na finalização
-     * registra data/hora e responsável. Cancelamento não é feito por aqui.
-     */
     public Pedido atualizarStatus(String id, StatusPedido novoStatus) {
         if (novoStatus == null) {
             throw new RegraNegocioException("Informe o novo status.");
@@ -134,10 +126,6 @@ public class PedidoService {
         return salvo;
     }
 
-    /**
-     * Cancela o pedido (operação exclusiva do gerente). Exige justificativa, só é
-     * permitido antes da saída e mantém todos os dados do pedido para histórico.
-     */
     @PreAuthorize("hasRole('GERENTE')")
     public Pedido cancelar(String id, String justificativa) {
         if (justificativa == null || justificativa.trim().length() < TAMANHO_MINIMO_JUSTIFICATIVA) {
@@ -168,10 +156,6 @@ public class PedidoService {
         return salvo;
     }
 
-    /**
-     * Aplica desconto percentual (operação exclusiva do gerente), limitado a 20% e
-     * somente antes da saída. O novo desconto substitui o anterior e o total é recalculado.
-     */
     @PreAuthorize("hasRole('GERENTE')")
     public Pedido aplicarDesconto(String id, BigDecimal percentual, String justificativa) {
         if (percentual == null || percentual.compareTo(BigDecimal.ZERO) <= 0
@@ -221,7 +205,6 @@ public class PedidoService {
         return campos;
     }
 
-    /** Pedidos antigos podem não ter status gravado; nesse caso são tratados como recebidos. */
     private StatusPedido statusAtual(Pedido pedido) {
         return pedido.getStatus() != null ? pedido.getStatus() : StatusPedido.RECEBIDO;
     }
@@ -266,10 +249,11 @@ public class PedidoService {
         }
 
         BigDecimal preco = BigDecimal.valueOf(produto.getPreco()).setScale(2, RoundingMode.HALF_UP);
-        return new ItemPedido(produto.getId(), produto.getNome(), quantidade, preco);
+        ItemPedido itemPedido = new ItemPedido(produto.getId(), produto.getNome(), quantidade, preco);
+        itemPedido.setTipoProduto(produto.getTipo());
+        return itemPedido;
     }
 
-    /** Subtotal = soma dos itens; desconto = subtotal x percentual; total = subtotal - desconto. */
     void recalcularValores(Pedido pedido) {
         BigDecimal subtotal = pedido.getItens().stream()
                 .map(ItemPedido::getSubtotal)

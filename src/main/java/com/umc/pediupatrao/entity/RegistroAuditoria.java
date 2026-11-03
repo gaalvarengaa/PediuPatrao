@@ -5,9 +5,6 @@ import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-/**
- * Evento de auditoria. Não possui setters: depois de criado, o registro não é alterado.
- */
 @Document(collection = "auditoria")
 public class RegistroAuditoria {
 
@@ -23,7 +20,6 @@ public class RegistroAuditoria {
     private String justificativa;
 
     protected RegistroAuditoria() {
-        // usado pelo Spring Data
     }
 
     public RegistroAuditoria(String usuario, String perfil, LocalDateTime dataHora, TipoOperacao operacao,
@@ -38,7 +34,6 @@ public class RegistroAuditoria {
         this.justificativa = justificativa;
     }
 
-    /** Cópia do registro com outra lista de alterações (usada para mascarar dados na consulta). */
     public RegistroAuditoria comAlteracoes(List<CampoAlterado> novasAlteracoes) {
         RegistroAuditoria copia = new RegistroAuditoria(usuario, perfil, dataHora, operacao,
                 entidade, entidadeId, novasAlteracoes, justificativa);
