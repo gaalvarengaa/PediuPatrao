@@ -4,6 +4,18 @@ Sistema de gestão de pedidos para pizzaria, com controle de acesso por perfil, 
 
 Tecnologias: Java 21, Spring Boot 3.4, Spring Security, Thymeleaf e MongoDB.
 
+## Dashboard Administrativo
+
+Painel para o gerente acompanhar o desempenho das vendas, a situação dos pedidos e os produtos mais vendidos, alimentado por uma API própria integrada ao MongoDB.
+
+- **Documento completo:** [docs/documento.md](docs/documento.md), com requisitos funcionais e não funcionais, regras de negócio, modelagem de dados, decisões de projeto, documentação dos endpoints e evidências de testes.
+- **Tela:** `/dashboard` no menu lateral, para os perfis ADMIN e GERENTE.
+- **API:** `GET /api/dashboard/indicadores`, `/vendas`, `/status` e `/produtos-mais-vendidos`.
+- **Vídeo de apresentação:** em breve.
+- **Para ver com dados:** suba com o perfil `demo`, descrito em [Pedidos de exemplo](#pedidos-de-exemplo-perfil-demo).
+
+![Dashboard](docs/img/dashboard-desktop.png)
+
 ## Como executar
 
 Pré-requisitos:

@@ -1,5 +1,33 @@
 # Dashboard Administrativo
 
+## Objetivo
+
+O Dashboard Administrativo permite que o responsável pelo estabelecimento acompanhe o desempenho das vendas, visualize informações sobre os pedidos e identifique tendências da operação, auxiliando na tomada de decisões.
+
+O painel faz parte do sistema Pediu Patrão e consome dados de uma API própria, integrada ao banco MongoDB já usado pelo sistema.
+
+## Escopo
+
+**Incluído:**
+
+- Consulta de indicadores de vendas, gráficos, situação dos pedidos e produtos mais vendidos.
+- Filtros de consulta aplicados a todas as informações do painel.
+- Endpoints da API que fornecem esses dados.
+
+**Fora do escopo:**
+
+- Cadastro ou alteração de pedidos pelo painel. O dashboard é somente leitura.
+- Exportação de relatórios.
+- Comparação entre estabelecimentos. O sistema atende uma única pizzaria.
+
+## Perfis de acesso
+
+| Perfil    | Acesso ao dashboard | Justificativa                                           |
+|-----------|---------------------|---------------------------------------------------------|
+| ADMIN     | Permitido           | Administra o sistema e já consulta pedidos e auditoria. |
+| GERENTE   | Permitido           | É o responsável pelo acompanhamento da operação.        |
+| ATENDENTE | Negado (403)        | Sua função é registrar pedidos, não analisar vendas.    |
+
 ## Requisitos funcionais
 
 ### RF01 — Indicadores gerais de vendas
@@ -107,6 +135,94 @@ O dashboard deve obter todos os dados pelos endpoints da API, descritos neste do
 | RNF05  | Usabilidade      | A tela funciona em computador e celular e exibe valores em reais e datas no formato brasileiro. |
 | RNF06  | Compatibilidade  | A solução usa a mesma base do sistema: Java 21, Spring Boot 3.4, Spring Security, Thymeleaf e MongoDB. Os gráficos usam Chart.js. |
 | RNF07  | Manutenibilidade | O código segue a separação em controller, service e repository e tem testes automatizados de cálculos, filtros, permissões e erros. |
+
+## Modelagem de dados
+
+O dashboard não cria coleções novas: ele lê os dados que o sistema já grava no MongoDB.
+
+```mermaid
+erDiagram
+    PEDIDOS ||--|{ ITENS : "contém (embutidos)"
+    ITENS }o--|| PRODUTOS : "produtoId"
+    PEDIDOS }o--|| CLIENTES : "clienteId"
+    PEDIDOS {
+        string id
+        string clienteId
+        string status
+        decimal subtotal
+        decimal percentualDesconto
+        decimal valorDesconto
+        decimal valorTotal
+        datetime dataHoraEntrada "índice"
+        datetime dataHoraSaida
+        datetime dataHoraFinalizacao
+        datetime dataHoraCancelamento
+    }
+    ITENS {
+        string produtoId
+        string nomeProduto
+        string tipoProduto "categoria copiada"
+        int quantidade
+        decimal precoUnitario
+        decimal subtotal
+    }
+    PRODUTOS {
+        string id
+        string nome
+        string tipo "categoria"
+        decimal preco
+        boolean ativo
+    }
+    CLIENTES {
+        string id
+        string nome
+        string telefone
+    }
+```
+
+| Coleção    | Uso no dashboard |
+|------------|------------------|
+| `pedidos`  | Fonte de todos os indicadores, gráficos, situações e do ranking. Os itens ficam embutidos no próprio pedido. |
+| `produtos` | Opções do filtro de produto e de categoria, e categoria de itens de pedidos antigos (RN07). |
+| `clientes` | Não é consultada pelo dashboard (RNF02). |
+| `usuarios` | Login e perfil de acesso (RNF01). |
+
+Exemplo simplificado de pedido gravado, sem os campos de responsável e os demais horários:
+
+```json
+{
+  "_id": "6ae9c2d8c0920c1c23cd9d01",
+  "clienteId": "6ae9c2d7c0920c1c23cd9cf0",
+  "status": "FINALIZADO",
+  "itens": [
+    { "produtoId": "6ae9c2d7c0920c1c23cd9ce2", "nomeProduto": "Pizza Calabresa", "tipoProduto": "Pizza",
+      "quantidade": 1, "precoUnitario": "45.00", "subtotal": "45.00" },
+    { "produtoId": "6ae9c2d7c0920c1c23cd9ce9", "nomeProduto": "Refrigerante 2L", "tipoProduto": "Bebida",
+      "quantidade": 1, "precoUnitario": "12.00", "subtotal": "12.00" }
+  ],
+  "subtotal": "57.00",
+  "percentualDesconto": "10.00",
+  "valorDesconto": "5.70",
+  "valorTotal": "51.30",
+  "dataHoraEntrada": "2026-10-24T20:15:00"
+}
+```
+
+Todas as consultas do dashboard começam pelo período, por isso a coleção `pedidos` tem um índice em `dataHoraEntrada` (criado em `MongoInitConfig`). A API busca os pedidos do período por esse índice e aplica os filtros de status, produto e categoria no serviço, onde também são feitas as somas.
+
+## Decisões de análise e projeto
+
+| Decisão | Motivo |
+|---------|--------|
+| Usar a mesma base do sistema (Spring Boot, Spring Security, Thymeleaf e MongoDB), sem criar outro serviço. | O dashboard reaproveita o login, os perfis e os dados que já existem, sem duplicar informação nem manter outra aplicação (RNF06). |
+| Manter os itens embutidos no pedido e copiar a categoria para cada item. | Um pedido é lido de uma vez, sem junções, e alterar a categoria de um produto depois não muda o histórico de vendas (RN07). |
+| Criar índice em `dataHoraEntrada`. | É o único critério presente em todas as consultas (RN02, RNF03). |
+| Fazer os cálculos no serviço Java, com `BigDecimal`. | As regras ficam em um só lugar e cobertas por testes, inclusive a conversão de pedidos antigos (RN04, RN08, RNF04, RNF07). Com os 750 pedidos do perfil `demo`, cada endpoint respondeu em cerca de 0,17 s, incluindo a verificação de senha. Se o volume crescer muito, as somas podem passar para o *aggregation pipeline* do MongoDB sem mudar os endpoints. |
+| Deixar pedidos cancelados fora do faturamento, dos gráficos e do ranking. | O faturamento deve refletir a receita real. Os cancelamentos continuam visíveis em um indicador próprio e na situação dos pedidos (RN01). |
+| Separar a API em quatro endpoints com os mesmos filtros. | Cada endpoint tem um contrato simples e corresponde a uma área da tela, e a mesma validação de filtros vale para todos (RF05, RF06). |
+| Dashboard somente leitura e restrito a ADMIN e GERENTE no backend. | Esconder botões não protege a API. A regra fica no `SecurityConfig` e vale também para chamadas diretas (RNF01). |
+| A tela busca os dados pela API em vez de recebê-los prontos no HTML. | Atende ao RF06 e permite atualizar os dados sem recarregar a página (RF07). |
+| Gerar pedidos de exemplo apenas no perfil `demo`. | Permite demonstrar o dashboard com dados realistas sem alterar o comportamento normal do sistema. |
 
 ## Documentação dos endpoints
 
