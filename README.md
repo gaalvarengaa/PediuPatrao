@@ -11,7 +11,7 @@ Painel para o gerente acompanhar o desempenho das vendas, a situação dos pedid
 - **Documento completo:** [docs/documento.md](docs/documento.md), com requisitos funcionais e não funcionais, regras de negócio, modelagem de dados, decisões de projeto, documentação dos endpoints e evidências de testes.
 - **Tela:** `/dashboard` no menu lateral, para os perfis ADMIN e GERENTE.
 - **API:** `GET /api/dashboard/indicadores`, `/vendas`, `/status` e `/produtos-mais-vendidos`.
-- **Vídeo de apresentação:** em breve.
+- **Vídeo de apresentação:** [assistir no Google Drive](https://drive.google.com/file/d/1bFKVqHDAbu8PEpWsNEFzmn5JBn0iRUNE/view?usp=sharing)
 - **Para ver com dados:** suba com o perfil `demo`, descrito em [Pedidos de exemplo](#pedidos-de-exemplo-perfil-demo).
 
 ![Dashboard](docs/img/dashboard-desktop.png)
@@ -124,8 +124,9 @@ curl -u gerente:teste123 -X POST http://localhost:8080/api/pedidos/ID/cancelar \
 sh ./mvnw test
 ```
 
-São 51 testes automatizados, que não precisam de MongoDB em execução:
+São 100 testes automatizados, que não precisam de MongoDB em execução:
 
+- **Dashboard (49):** indicadores, vendas, situação dos pedidos, ranking de produtos, filtros, erros 400 e 422, permissões dos endpoints `/api/dashboard` e pedidos de exemplo do perfil `demo`. Detalhes em [docs/documento.md](docs/documento.md#evidências-de-testes).
 - **Regras de negócio (30):** transições de status, cancelamento, desconto, cálculo do total no servidor, auditoria das alterações de clientes (valores anteriores e novos de endereço e telefone), validação de clientes, proteção contra autoalteração de perfil, mascaramento de telefone e exclusão de senhas da auditoria.
 - **Permissões das APIs (21):** sobem a configuração real do Spring Security (`@WebMvcTest`) e comprovam o bloqueio no backend. Por exemplo: ATENDENTE e ADMIN recebem 403 ao cancelar ou aplicar desconto; ATENDENTE recebe 403 na auditoria; só o ADMIN gerencia usuários; a auditoria não aceita `POST` nem `DELETE`; requisições de sessão sem token CSRF são recusadas; sem login, a API responde 401.
 
